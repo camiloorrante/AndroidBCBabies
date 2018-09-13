@@ -6,17 +6,24 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.FrameLayout;
 
 public class MainActivity extends AppCompatActivity {
 
     FrameLayout simpleFrameLayout;
     TabLayout tabLayout;
+    Registrant registrant;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        this.requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.activity_main);
+        registrant = new Registrant();
+
         // get the reference of FrameLayout and TabLayout
         simpleFrameLayout = (FrameLayout) findViewById(R.id.simpleFrameLayout);
         tabLayout = (TabLayout) findViewById(R.id.simpleTabLayout);
@@ -34,6 +41,11 @@ public class MainActivity extends AppCompatActivity {
         thirdTab.setText("Step3"); // set the Text for the first Tab
         tabLayout.addTab(thirdTab); // add  the tab at in the TabLayout
 
+        FragmentManager fm = getSupportFragmentManager();
+        FragmentTransaction ft = fm.beginTransaction();
+        ft.replace(R.id.simpleFrameLayout, new FirstFragment());
+        ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
+        ft.commit();
 
         // perform setOnTabSelectedListener event on TabLayout
         tabLayout.setOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {

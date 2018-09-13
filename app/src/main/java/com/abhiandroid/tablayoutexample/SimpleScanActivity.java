@@ -1,85 +1,76 @@
+
 package com.abhiandroid.tablayoutexample;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Vector;
+import java.util.ArrayList;
 
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.DatePickerDialog;
 import android.app.Dialog;
-import android.app.TimePickerDialog;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.content.res.Resources;
-import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Bitmap;
+import android.graphics.Bitmap.CompressFormat;
+import android.graphics.Point;
+import android.graphics.RectF;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
 import android.media.AudioManager;
 import android.media.ToneGenerator;
+import android.net.Uri;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
-import android.util.Log;
+import android.os.Environment;
+import android.view.Display;
 import android.view.LayoutInflater;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
+import android.view.View.OnClickListener;
+import android.view.View.OnLongClickListener;
 import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.DatePicker;
 import android.widget.EditText;
-import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.PopupMenu;
+import android.widget.PopupMenu.OnMenuItemClickListener;
 import android.widget.Spinner;
 import android.widget.TextView;
-import android.widget.TimePicker;
 import android.widget.Toast;
 
 import com.integratedbiometrics.ibscanultimate.IBScan;
+import com.integratedbiometrics.ibscanultimate.IBScan.SdkVersion;
 import com.integratedbiometrics.ibscanultimate.IBScanDevice;
+import com.integratedbiometrics.ibscanultimate.IBScanDevice.FingerCountState;
+import com.integratedbiometrics.ibscanultimate.IBScanDevice.FingerQualityState;
+import com.integratedbiometrics.ibscanultimate.IBScanDevice.ImageData;
+import com.integratedbiometrics.ibscanultimate.IBScanDevice.ImageType;
+import com.integratedbiometrics.ibscanultimate.IBScanDevice.LedState;
+import com.integratedbiometrics.ibscanultimate.IBScanDevice.PlatenState;
+import com.integratedbiometrics.ibscanultimate.IBScanDevice.RollingData;
+import com.integratedbiometrics.ibscanultimate.IBScanDevice.SegmentPosition;
 import com.integratedbiometrics.ibscanultimate.IBScanDeviceListener;
 import com.integratedbiometrics.ibscanultimate.IBScanException;
 import com.integratedbiometrics.ibscanultimate.IBScanListener;
+import com.abhiandroid.tablayoutexample.R;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Vector;
+import uk.co.senab.photoview.PhotoViewAttacher;
 
-public class SecondFragment extends Fragment implements View.OnClickListener, AdapterView.OnItemSelectedListener,
-        IBScanListener, IBScanDeviceListener {
-    Button button;
-    Button button2;
-
-    private static final String CERO = "0";
-    private static final String DOS_PUNTOS = ":";
-    private static final String BARRA = "/";
-
-    //Calendario para obtener fecha & hora
-    public final Calendar c = Calendar.getInstance();
-
-    //Fecha
-    final int mes = c.get(Calendar.MONTH);
-    final int dia = c.get(Calendar.DAY_OF_MONTH);
-    final int anio = c.get(Calendar.YEAR);
-
-    //Hora
-    final int hora = c.get(Calendar.HOUR_OF_DAY);
-    final int minuto = c.get(Calendar.MINUTE);
-
-    //Widgets
-    EditText etFecha, etHora;
-    ImageButton ibObtenerFecha, ibObtenerHora;
-
-    // comienza las declaraciones del IBScan
+public class SimpleScanActivity extends Activity implements IBScanListener, IBScanDeviceListener {
     /* *********************************************************************************************
      * CONSTANTES PRIVADAS
      ******************************************************************************************** */
@@ -185,7 +176,7 @@ public class SecondFragment extends Fragment implements View.OnClickListener, Ad
     protected class CaptureInfo {
         String PreCaptureMessage;        // para mostrar en la ventana de huellas dactilares
         String PostCaptuerMessage;        // para mostrar en la ventana de huellas dactilares
-        IBScanDevice.ImageType ImageType;                // modo de captura
+        ImageType ImageType;                // modo de captura
         int NumberOfFinger;            // número de conteo de dedos
         String fingerName;                // nombre del dedo (por ejemplo, pulgares izquierdo, índice izquierdo ...)
     }
@@ -197,6 +188,7 @@ public class SecondFragment extends Fragment implements View.OnClickListener, Ad
      ******************************************************************************************** */
 
     private TextView m_txtStatusMessage;
+    private TextView m_txtOverlayText;
     private ImageView m_imgPreview;
     private ImageView m_imgEnlargedView;
     private Spinner m_cboUsbDevices;
@@ -233,13 +225,13 @@ public class SecondFragment extends Fragment implements View.OnClickListener, Ad
     /*
      * Información retenida para mostrar vista.
      */
-    private IBScanDevice.ImageData m_lastResultImage;
-    private IBScanDevice.ImageData[] m_lastSegmentImages = new IBScanDevice.ImageData[FINGER_SEGMENT_COUNT];
+    private ImageData m_lastResultImage;
+    private ImageData[] m_lastSegmentImages = new ImageData[FINGER_SEGMENT_COUNT];
 
     /*
      * Información retenida para cambios de orientación.
      */
-    private SecondFragment.AppData m_savedData = new SecondFragment.AppData();
+    private AppData m_savedData = new AppData();
 
     protected int m_nSelectedDevIndex = -1;                ///< Índice del dispositivo seleccionado
     protected boolean m_bInitializing = false;                ///< La inicialización del dispositivo está en progreso
@@ -251,14 +243,14 @@ public class SecondFragment extends Fragment implements View.OnClickListener, Ad
     protected boolean m_bBlank = false;
     protected boolean m_bSaveWarningOfClearPlaten;
 
-    protected Vector<SecondFragment.CaptureInfo> m_vecCaptureSeq = new Vector<SecondFragment.CaptureInfo>();        ///< Secuencia de pasos de captura
+    protected Vector<CaptureInfo> m_vecCaptureSeq = new Vector<CaptureInfo>();        ///< Secuencia de pasos de captura
     protected int m_nCurrentCaptureStep = -1;                    ///< Paso de captura actual
 
     protected IBScanDevice.LedState m_LedState;
-    protected IBScanDevice.FingerQualityState[] m_FingerQuality = {IBScanDevice.FingerQualityState.FINGER_NOT_PRESENT, IBScanDevice.FingerQualityState.FINGER_NOT_PRESENT, IBScanDevice.FingerQualityState.FINGER_NOT_PRESENT, IBScanDevice.FingerQualityState.FINGER_NOT_PRESENT};
-    protected IBScanDevice.ImageType m_ImageType;
+    protected FingerQualityState[] m_FingerQuality = {FingerQualityState.FINGER_NOT_PRESENT, FingerQualityState.FINGER_NOT_PRESENT, FingerQualityState.FINGER_NOT_PRESENT, FingerQualityState.FINGER_NOT_PRESENT};
+    protected ImageType m_ImageType;
     protected int m_nSegmentImageArrayCount = 0;
-    protected IBScanDevice.SegmentPosition[] m_SegmentPositionArray;
+    protected SegmentPosition[] m_SegmentPositionArray;
 
     protected ArrayList<String> m_arrUsbDevices;
     protected ArrayList<String> m_arrCaptureSeq;
@@ -273,110 +265,29 @@ public class SecondFragment extends Fragment implements View.OnClickListener, Ad
     // GLobal varias definiciones
     // ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    // termina las declaraciones del IBScan
-    public SecondFragment() {
-        // Required empty public constructor
-    }
- 
+
+    /* *********************************************************************************************
+     * INTERFAZ HEREDITARIA (ACTIVIDAD ANULA)
+     ******************************************************************************************** */
+
+    /*
+     * Se llama cuando la actividad se inicia.
+     */
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        //etFecha = (EditText) getView().findViewById(R.id.et_mostrar_fecha_picker);
-        /*
-        etHora = (EditText) getView().findViewById(R.id.et_mostrar_hora_picker);
-
-        ibObtenerFecha = (ImageButton) getView().findViewById(R.id.ib_obtener_fecha);
-        ibObtenerHora = (ImageButton) getView().findViewById(R.id.ib_obtener_hora);
-
-        ibObtenerFecha.setOnClickListener(this);
-        ibObtenerHora.setOnClickListener(this);
-        */
-
-    }
-
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
-        Log.d("PTM", "si esta creando la vista");
-
-        //return inflater.inflate(R.layout.fragment_second, container, false);
-        View RootView = inflater.inflate(R.layout.fragment_second, container, false);
-        etFecha = (EditText) RootView.findViewById(R.id.et_mostrar_fecha_picker);
-        etHora = (EditText) RootView.findViewById(R.id.et_mostrar_hora_picker);
-
-        ibObtenerFecha = (ImageButton) RootView.findViewById(R.id.ib_obtener_fecha);
-        ibObtenerHora = (ImageButton) RootView.findViewById(R.id.ib_obtener_hora);
-
-        ibObtenerFecha.setOnClickListener(this);
-        ibObtenerHora.setOnClickListener(this);
-
-        //_InitUIFields(RootView);
-        /*InitUIFields*/
-
-        m_txtStatusMessage = (TextView) RootView.findViewById(R.id.txtStatusMessage);
-        m_imgPreview = (ImageView) RootView.findViewById(R.id.imgPreview);
-        m_imgPreview.setBackgroundColor(PREVIEW_IMAGE_BACKGROUND);
-
-        m_btnCaptureStop = (Button) RootView.findViewById(R.id.stop_capture_btn);
-        m_btnCaptureStop.setOnClickListener(this.m_btnCaptureStopClickListener);
-
-        m_btnCaptureStart = (Button) RootView.findViewById(R.id.start_capture_btn);
-        m_btnCaptureStart.setOnClickListener(this.m_btnCaptureStartClickListener);
-
-        m_cboUsbDevices = (Spinner) RootView.findViewById(R.id.spinUsbDevices);
-        /* */
-
-
-
-
-        // Spinner element
-        Spinner spinner = (Spinner) RootView.findViewById(R.id.spinner);
-        Spinner spinnerDevice = (Spinner) RootView.findViewById(R.id.spinUsbDevices);
-
-        // Spinner click listener
-        spinner.setOnItemSelectedListener(this);
-        spinnerDevice.setOnItemSelectedListener(this);
-
-        // Spinner Drop down elements
-        List<String> categories = new ArrayList<String>();
-
-        categories.add("Italia");
-        categories.add("Argentina");
-        categories.add("México");
-        categories.add("Uruguay");
-        categories.add("Colombia");
-
-        List<String> devices = new ArrayList<String>();
-        devices.add("Seleccione un dispositivo");
-        devices.add("Columbo");
-        devices.add("Italia");
-
-        // Creating adapter for spinner
-        ArrayAdapter<String> dataAdapter = new ArrayAdapter<String>(getActivity(), android.R.layout.simple_spinner_item, categories);
-        ArrayAdapter<String> dataAdapter2 = new ArrayAdapter<String>(getActivity(), android.R.layout.simple_spinner_item, devices);
-
-        // Drop down layout style - list view with radio button
-        dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        dataAdapter2.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-
-        // attaching data adapter to spinner
-        spinner.setAdapter(dataAdapter);
-        spinnerDevice.setAdapter(dataAdapter2);
-
-        // Inicializaciones de IBScan
-        m_ibScan = IBScan.getInstance(getActivity().getApplicationContext());
+        m_ibScan = IBScan.getInstance(this.getApplicationContext());
         m_ibScan.setScanListener(this);
 
         Resources r = Resources.getSystem();
         Configuration config = r.getConfiguration();
 
-        //setContentView(R.layout.ib_scan_port);
+        setContentView(R.layout.ib_scan_port);
 
 
         /*Inicializar campos de IU. */
-        //_InitUIFields();
+        _InitUIFields();
 
         /*
          Asegúrese de que no haya dispositivos USB conectados que sean escáneres IB
@@ -386,7 +297,7 @@ public class SecondFragment extends Fragment implements View.OnClickListener, Ad
          están conectados, lo que dará como resultado otra actualización.
          */
 
-        final UsbManager manager = (UsbManager) getActivity().getApplicationContext().getSystemService(Context.USB_SERVICE);
+        final UsbManager manager = (UsbManager) this.getApplicationContext().getSystemService(Context.USB_SERVICE);
         final HashMap<String, UsbDevice> deviceList = manager.getDeviceList();
         final Iterator<UsbDevice> deviceIterator = deviceList.values().iterator();
         while (deviceIterator.hasNext()) {
@@ -407,84 +318,17 @@ public class SecondFragment extends Fragment implements View.OnClickListener, Ad
 
         _TimerTaskThreadCallback thread = new _TimerTaskThreadCallback(__TIMER_STATUS_DELAY__);
         thread.start();
-        // terminan inicializaciones del IBScan
-
-
-        return RootView;
-    }
-    @Override
-    public void onClick(View v) {
-        switch (v.getId()){
-            case R.id.ib_obtener_fecha:
-                obtenerFecha();
-                break;
-            case R.id.ib_obtener_hora:
-                obtenerHora();
-                break;
-        }
     }
 
-    private void obtenerFecha(){
-        DatePickerDialog recogerFecha = new DatePickerDialog(getActivity(), new DatePickerDialog.OnDateSetListener() {
-
-            public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
-
-                final int mesActual = month + 1;
-
-                String diaFormateado = (dayOfMonth < 10)? CERO + String.valueOf(dayOfMonth):String.valueOf(dayOfMonth);
-                String mesFormateado = (mesActual < 10)? CERO + String.valueOf(mesActual):String.valueOf(mesActual);
-
-                etFecha.setText(diaFormateado + BARRA + mesFormateado + BARRA + year);
-
-
-            }
-        },anio, mes, dia);
-
-        recogerFecha.show();
-
-    }
-
-    private void obtenerHora(){
-        TimePickerDialog recogerHora = new TimePickerDialog(getActivity(), new TimePickerDialog.OnTimeSetListener() {
-
-            public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
-
-                String horaFormateada =  (hourOfDay < 9)? String.valueOf(CERO + hourOfDay) : String.valueOf(hourOfDay);
-                String minutoFormateado = (minute < 9)? String.valueOf(CERO + minute):String.valueOf(minute);
-
-                String AM_PM;
-                if(hourOfDay < 12) {
-                    AM_PM = "a.m.";
-                } else {
-                    AM_PM = "p.m.";
-                }
-
-                etHora.setText(horaFormateada + DOS_PUNTOS + minutoFormateado + " " + AM_PM);
-            }
-
-        }, hora, minuto, false);
-
-        recogerHora.show();
-    }
-    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-        // On selecting a spinner item
-        String item = parent.getItemAtPosition(position).toString();
-
-    }
-    public void onNothingSelected(AdapterView<?> arg0) {
-        // TODO Auto-generated method stub
-    }
-
-    //metodos del IBScan
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
 
-        //setContentView(R.layout.ib_scan_port);
+        setContentView(R.layout.ib_scan_port);
 
 
         /* Inicializar campos de IU para una nueva orientación. */
-        _InitUIFields(getView());
+        _InitUIFields();
 
         OnMsg_UpdateDeviceList(true);
 
@@ -498,7 +342,7 @@ public class SecondFragment extends Fragment implements View.OnClickListener, Ad
      */
 
     @Override
-    public void onDestroy() {
+    protected void onDestroy() {
         super.onDestroy();
 
         for (int i = 0; i < 10; i++) {
@@ -514,11 +358,15 @@ public class SecondFragment extends Fragment implements View.OnClickListener, Ad
         }
     }
 
-//    @Override
-//    public void onBackPressed() {
-//        exitApp(getActivity());
-//    }
+    @Override
+    public void onBackPressed() {
+        exitApp(this);
+    }
 
+    @Override
+    public Object onRetainNonConfigurationInstance() {
+        return null;
+    }
 
     /* *********************************************************************************************
      * MÉTODOS PRIVADOS
@@ -527,19 +375,20 @@ public class SecondFragment extends Fragment implements View.OnClickListener, Ad
     /*
      * Inicializa los campos de la interfaz de usuario para una nueva orientación.
      */
-    private void _InitUIFields(View rootView) {
-        m_txtStatusMessage = (TextView) rootView.findViewById(R.id.txtStatusMessage);
+    private void _InitUIFields() {
+        m_txtStatusMessage = (TextView) findViewById(R.id.txtStatusMessage);
+        m_txtOverlayText = (TextView) findViewById(R.id.txtOverlayText);
 
-        m_imgPreview = (ImageView) rootView.findViewById(R.id.imgPreview);
+        m_imgPreview = (ImageView) findViewById(R.id.imgPreview);
         m_imgPreview.setBackgroundColor(PREVIEW_IMAGE_BACKGROUND);
 
-        m_btnCaptureStop = (Button) rootView.findViewById(R.id.stop_capture_btn);
+        m_btnCaptureStop = (Button) findViewById(R.id.stop_capture_btn);
         m_btnCaptureStop.setOnClickListener(this.m_btnCaptureStopClickListener);
 
-        m_btnCaptureStart = (Button) rootView.findViewById(R.id.start_capture_btn);
+        m_btnCaptureStart = (Button) findViewById(R.id.start_capture_btn);
         m_btnCaptureStart.setOnClickListener(this.m_btnCaptureStartClickListener);
 
-        m_cboUsbDevices = (Spinner) rootView.findViewById(R.id.spinUsbDevices);
+        m_cboUsbDevices = (Spinner) findViewById(R.id.spinUsbDevices);
     }
 
     /*
@@ -549,6 +398,11 @@ public class SecondFragment extends Fragment implements View.OnClickListener, Ad
 
         if (m_savedData.usbDevices != __INVALID_POS__) {
             m_cboUsbDevices.setSelection(m_savedData.usbDevices);
+        }
+
+        if (m_savedData.overlayText != null) {
+            m_txtOverlayText.setTextColor(m_savedData.overlayColor);
+            m_txtOverlayText.setText(m_savedData.overlayText);
         }
 
         if (m_savedData.imageBitmap != null) {
@@ -585,11 +439,28 @@ public class SecondFragment extends Fragment implements View.OnClickListener, Ad
      */
     protected void _SetStatusBarMessage(final String s) {
         /* Asegúrese de que esto ocurra en el hilo de UI. */
-        getActivity().runOnUiThread(new Runnable() {
+        runOnUiThread(new Runnable() {
             @Override
             public void run() {
 
                 m_txtStatusMessage.setText(s);
+            }
+        });
+    }
+
+    /*
+     * Set image overlay message text box.
+     */
+    protected void _SetOverlayText(final String s, final int txtColor) {
+        m_savedData.overlayText = s;
+        m_savedData.overlayColor = txtColor;
+
+        /* Asegúrese de que esto ocurra en el hilo de UI. */
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                m_txtOverlayText.setTextColor(txtColor);
+                m_txtOverlayText.setText(s);
             }
         });
     }
@@ -699,7 +570,7 @@ public class SecondFragment extends Fragment implements View.OnClickListener, Ad
         return (bitmap);
     }
 
-    protected void _CalculateScaleFactors(IBScanDevice.ImageData image, int outWidth, int outHeight) {
+    protected void _CalculateScaleFactors(ImageData image, int outWidth, int outHeight) {
         int left = 0, top = 0;
         int tmp_width = outWidth;
         int tmp_height = outHeight;
@@ -764,6 +635,14 @@ public class SecondFragment extends Fragment implements View.OnClickListener, Ad
 //		canvas.drawText(m_strImageMessage, 10, 20, g);
 		canvas.drawText(m_strImageMessage, 20, 40, g);
 */
+
+        /*
+         * Dibujar textview sobre imageview
+         */
+        if (m_bNeedClearPlaten)
+            _SetOverlayText(m_strImageMessage, Color.RED);
+        else
+            _SetOverlayText(m_strImageMessage, Color.BLUE);
     }
 
     protected void _DrawOverlay_WarningOfClearPlaten(Canvas canvas, int left, int top, int width, int height) {
@@ -783,7 +662,7 @@ public class SecondFragment extends Fragment implements View.OnClickListener, Ad
         }
     }
 
-    protected void _DrawOverlay_ResultSegmentImage(Canvas canvas, IBScanDevice.ImageData image, int outWidth, int outHeight) {
+    protected void _DrawOverlay_ResultSegmentImage(Canvas canvas, ImageData image, int outWidth, int outHeight) {
         if (image.isFinal) {
 //			if (m_chkDrawSegmentImage.isSelected())
             {
@@ -815,13 +694,13 @@ public class SecondFragment extends Fragment implements View.OnClickListener, Ad
         }
     }
 
-    protected void _DrawOverlay_RollGuideLine(Canvas canvas, IBScanDevice.ImageData image, int width, int height) {
+    protected void _DrawOverlay_RollGuideLine(Canvas canvas, ImageData image, int width, int height) {
         if (getIBScanDevice() == null || m_nCurrentCaptureStep == -1)
             return;
 
         if (m_ImageType == IBScanDevice.ImageType.ROLL_SINGLE_FINGER) {
             Paint g = new Paint();
-            IBScanDevice.RollingData rollingdata;
+            RollingData rollingdata;
             g.setAntiAlias(true);
             try {
                 rollingdata = getIBScanDevice().getRollingInfo();
@@ -938,7 +817,7 @@ public class SecondFragment extends Fragment implements View.OnClickListener, Ad
 
     protected void _AddCaptureSeqVector(String PreCaptureMessage, String PostCaptuerMessage,
                                         IBScanDevice.ImageType imageType, int NumberOfFinger, String fingerName) {
-        SecondFragment.CaptureInfo info = new SecondFragment.CaptureInfo();
+        CaptureInfo info = new CaptureInfo();
         info.PreCaptureMessage = PreCaptureMessage;
         info.PostCaptuerMessage = PostCaptuerMessage;
         info.ImageType = imageType;
@@ -986,7 +865,7 @@ public class SecondFragment extends Fragment implements View.OnClickListener, Ad
                 }
             }
 
-            ArrayAdapter<String> adapter = new ArrayAdapter<String>(getActivity(),
+            ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
                     R.layout.spinner_text_layout, m_arrCaptureSeq);
             adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 
@@ -1011,7 +890,7 @@ public class SecondFragment extends Fragment implements View.OnClickListener, Ad
         m_bInitializing = false;
     }
 
-    protected void _SaveBitmapImage(IBScanDevice.ImageData image, String fingerName) {
+    protected void _SaveBitmapImage(ImageData image, String fingerName) {
 /*		String filename = m_ImgSaveFolderName + ".bmp";
 
 		try
@@ -1025,7 +904,7 @@ public class SecondFragment extends Fragment implements View.OnClickListener, Ad
 */
     }
 
-    protected void _SaveWsqImage(IBScanDevice.ImageData image, String fingerName) {
+    protected void _SaveWsqImage(ImageData image, String fingerName) {
         String filename = m_ImgSaveFolderName + ".wsq";
 
         try {
@@ -1035,7 +914,7 @@ public class SecondFragment extends Fragment implements View.OnClickListener, Ad
         }
     }
 
-    protected void _SavePngImage(IBScanDevice.ImageData image, String fingerName) {
+    protected void _SavePngImage(ImageData image, String fingerName) {
         String filename = m_ImgSaveFolderName + ".png";
 
         File file = new File(filename);
@@ -1044,7 +923,7 @@ public class SecondFragment extends Fragment implements View.OnClickListener, Ad
         try {
             filestream = new FileOutputStream(file);
             final Bitmap bitmap = image.toBitmap();
-            bitmap.compress(Bitmap.CompressFormat.PNG, 100, filestream);
+            bitmap.compress(CompressFormat.PNG, 100, filestream);
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
@@ -1056,7 +935,7 @@ public class SecondFragment extends Fragment implements View.OnClickListener, Ad
         }
     }
 
-    protected void _SaveJP2Image(IBScanDevice.ImageData image, String fingerName) {
+    protected void _SaveJP2Image(ImageData image, String fingerName) {
 /*		String filename = m_ImgSaveFolderName + ".jp2";
 
 		try
@@ -1075,9 +954,9 @@ public class SecondFragment extends Fragment implements View.OnClickListener, Ad
 */
     }
 
-    public void _SetLEDs(SecondFragment.CaptureInfo info, int ledColor, boolean bBlink) {
+    public void _SetLEDs(CaptureInfo info, int ledColor, boolean bBlink) {
         try {
-            IBScanDevice.LedState ledState = getIBScanDevice().getOperableLEDs();
+            LedState ledState = getIBScanDevice().getOperableLEDs();
             if (ledState.ledCount == 0) {
                 return;
             }
@@ -1302,7 +1181,7 @@ public class SecondFragment extends Fragment implements View.OnClickListener, Ad
     ////////////////////////////////////////////////////////////////////////////////////////////
     // Event-dispatch threads
     private void OnMsg_SetStatusBarMessage(final String s) {
-        getActivity().runOnUiThread(new Runnable() {
+        runOnUiThread(new Runnable() {
 
             @Override
             public void run() {
@@ -1313,7 +1192,7 @@ public class SecondFragment extends Fragment implements View.OnClickListener, Ad
 
 
     private void OnMsg_Beep(final int beepType) {
-        getActivity().runOnUiThread(new Runnable() {
+        runOnUiThread(new Runnable() {
 
             @Override
             public void run() {
@@ -1330,7 +1209,7 @@ public class SecondFragment extends Fragment implements View.OnClickListener, Ad
     }
 
     private void OnMsg_CaptureSeqStart() {
-        getActivity().runOnUiThread(new Runnable() {
+        runOnUiThread(new Runnable() {
 
             @Override
             public void run() {
@@ -1353,7 +1232,7 @@ public class SecondFragment extends Fragment implements View.OnClickListener, Ad
  protected final String CAPTURE_SEQ_10_FLAT_WITH_4_FINGER_SCANNER 	= "10 flat fingers with 4-finger scanner";
  */
                 if (strCaptureSeq.equals(CAPTURE_SEQ_FLAT_SINGLE_FINGER)) {
-                    _AddCaptureSeqVector("ponga un dedo!",
+                    _AddCaptureSeqVector("Por favor, ponga un dedo en el sensor!",
                             "Mantenga el dedo en el sensor!",
                             IBScanDevice.ImageType.FLAT_SINGLE_FINGER,
                             1,
@@ -1535,7 +1414,7 @@ public class SecondFragment extends Fragment implements View.OnClickListener, Ad
     }
 
     private void OnMsg_CaptureSeqNext() {
-        getActivity().runOnUiThread(new Runnable() {
+        runOnUiThread(new Runnable() {
 
             @Override
             public void run() {
@@ -1544,12 +1423,12 @@ public class SecondFragment extends Fragment implements View.OnClickListener, Ad
 
                 m_bBlank = false;
                 for (int i = 0; i < 4; i++)
-                    m_FingerQuality[i] = IBScanDevice.FingerQualityState.FINGER_NOT_PRESENT;
+                    m_FingerQuality[i] = FingerQualityState.FINGER_NOT_PRESENT;
 
                 m_nCurrentCaptureStep++;
                 if (m_nCurrentCaptureStep >= m_vecCaptureSeq.size()) {
                     // All of capture sequence completely
-                    SecondFragment.CaptureInfo tmpInfo = new SecondFragment.CaptureInfo();
+                    CaptureInfo tmpInfo = new CaptureInfo();
                     _SetLEDs(tmpInfo, __LED_COLOR_NONE__, false);
                     m_nCurrentCaptureStep = -1;
 
@@ -1576,7 +1455,7 @@ public class SecondFragment extends Fragment implements View.OnClickListener, Ad
                         m_strImageMessage = "";
                     }
 
-                    SecondFragment.CaptureInfo info = m_vecCaptureSeq.elementAt(m_nCurrentCaptureStep);
+                    CaptureInfo info = m_vecCaptureSeq.elementAt(m_nCurrentCaptureStep);
 
                     IBScanDevice.ImageResolution imgRes = IBScanDevice.ImageResolution.RESOLUTION_500;
                     boolean bAvailable = getIBScanDevice().isCaptureAvailable(info.ImageType, imgRes);
@@ -1621,7 +1500,7 @@ public class SecondFragment extends Fragment implements View.OnClickListener, Ad
     }
 
     private void OnMsg_cboUsbDevice_Changed() {
-        getActivity().runOnUiThread(new Runnable() {
+        runOnUiThread(new Runnable() {
 
             @Override
             public void run() {
@@ -1643,7 +1522,7 @@ public class SecondFragment extends Fragment implements View.OnClickListener, Ad
     }
 
     private void OnMsg_UpdateDeviceList(final boolean bConfigurationChanged) {
-        getActivity().runOnUiThread(new Runnable() {
+        runOnUiThread(new Runnable() {
 
             @Override
             public void run() {
@@ -1680,7 +1559,7 @@ public class SecondFragment extends Fragment implements View.OnClickListener, Ad
                             selectedDev = i + 1;
                     }
 
-                    ArrayAdapter<String> adapter = new ArrayAdapter<String>(getActivity(),
+                    ArrayAdapter<String> adapter = new ArrayAdapter<String>(SimpleScanActivity.this,
                             R.layout.spinner_text_layout, m_arrUsbDevices);
                     adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
                     m_cboUsbDevices.setAdapter(adapter);
@@ -1703,7 +1582,7 @@ public class SecondFragment extends Fragment implements View.OnClickListener, Ad
     }
 
     private void OnMsg_UpdateDisplayResources() {
-        getActivity().runOnUiThread(new Runnable() {
+        runOnUiThread(new Runnable() {
 
             @Override
             public void run() {
@@ -1726,7 +1605,7 @@ public class SecondFragment extends Fragment implements View.OnClickListener, Ad
 //				m_chkUseClearPlaten.setEnabled(uninitializedDev);
 
                 if (active) {
-                    m_btnCaptureStart.setText("Tomar");
+                    m_btnCaptureStart.setText("Tomar imagen de resultado");
                 } else {
                     m_btnCaptureStart.setText("Iniciar");
                 }
@@ -1735,7 +1614,7 @@ public class SecondFragment extends Fragment implements View.OnClickListener, Ad
     }
 
     private void OnMsg_AskRecapture(final IBScanException imageStatus) {
-        getActivity().runOnUiThread(new Runnable() {
+        runOnUiThread(new Runnable() {
 
             @Override
             public void run() {
@@ -1743,7 +1622,7 @@ public class SecondFragment extends Fragment implements View.OnClickListener, Ad
 
                 askMsg = "[Advertencia = " + imageStatus.getType().toString() + "] Quieres una recaptura?";
 
-                AlertDialog.Builder dlgAskRecapture = new AlertDialog.Builder(getActivity().getApplicationContext());
+                AlertDialog.Builder dlgAskRecapture = new AlertDialog.Builder(SimpleScanActivity.this);
                 dlgAskRecapture.setMessage(askMsg);
                 dlgAskRecapture.setPositiveButton("Si",
                         new DialogInterface.OnClickListener() {
@@ -1767,7 +1646,7 @@ public class SecondFragment extends Fragment implements View.OnClickListener, Ad
 
 
     private void OnMsg_DeviceCommunicationBreak() {
-        getActivity().runOnUiThread(new Runnable() {
+        runOnUiThread(new Runnable() {
 
             @Override
             public void run() {
@@ -1790,8 +1669,8 @@ public class SecondFragment extends Fragment implements View.OnClickListener, Ad
         });
     }
 
-    private void OnMsg_DrawImage(final IBScanDevice device, final IBScanDevice.ImageData image) {
-        getActivity().runOnUiThread(new Runnable() {
+    private void OnMsg_DrawImage(final IBScanDevice device, final ImageData image) {
+        runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 int destWidth = m_imgPreview.getWidth() - 20;
@@ -1850,7 +1729,7 @@ public class SecondFragment extends Fragment implements View.OnClickListener, Ad
     }
 
     private void OnMsg_DrawFingerQuality() {
-        getActivity().runOnUiThread(new Runnable() {
+        runOnUiThread(new Runnable() {
 
             @Override
             public void run() {
@@ -1880,15 +1759,131 @@ public class SecondFragment extends Fragment implements View.OnClickListener, Ad
      * Mostrar Toast mensaje en la UI thread.
      */
     private void showToastOnUiThread(final String message, final int duration) {
-        getActivity().runOnUiThread(new Runnable() {
+        runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                Toast toast = Toast.makeText(getActivity().getApplicationContext(), message, duration);
+                Toast toast = Toast.makeText(getApplicationContext(), message, duration);
                 toast.show();
             }
         });
     }
-    
+
+    /*
+     * Mostrar imagen ampliada en la ventana emergente.
+     */
+    private void showEnlargedImage() {
+        /*
+         * Sanity check.  Make sure the image exists.
+         */
+        if (this.m_lastResultImage == null) {
+            showToastOnUiThread("No hay información de la última imagen", Toast.LENGTH_SHORT);
+            return;
+        }
+
+        m_enlargedDialog = new Dialog(this, R.style.Enlarged);
+        m_enlargedDialog.setContentView(R.layout.enlarged);
+        m_enlargedDialog.setCancelable(false);
+
+        final Bitmap bitmap = m_lastResultImage.toBitmap();
+        m_imgEnlargedView = (ImageView) m_enlargedDialog.findViewById(R.id.enlarged_image);
+        m_btnCloseEnlargedDialog = (Button) m_enlargedDialog.findViewById(R.id.btnClose);
+        m_txtEnlargedScale = (TextView) m_enlargedDialog.findViewById(R.id.txtDisplayImgScale);
+
+        m_imgEnlargedView.setScaleType(ImageView.ScaleType.CENTER);
+        m_imgEnlargedView.setImageBitmap(bitmap);
+        m_btnCloseEnlargedDialog.setOnClickListener(m_btnCloseEnlargedDialogClickListener);
+
+        final PhotoViewAttacher mAttacher = new PhotoViewAttacher(m_imgEnlargedView);
+
+        Display display = getWindowManager().getDefaultDisplay();
+        Point size = new Point();
+        display.getSize(size);
+
+        int disp_w = size.x - 20; //m_imgEnlargedView.getWidth();
+        int disp_h = size.y - 50; //m_imgEnlargedView.getHeight();
+        float ratio_w = (float) disp_w / m_lastResultImage.width;
+        float ratio_h = (float) disp_h / m_lastResultImage.height;
+        float ratio_1x = 0.0f;
+        if (ratio_w > ratio_h) {
+            ratio_1x = (float) m_lastResultImage.height / disp_h;
+        } else {
+            ratio_1x = (float) m_lastResultImage.width / disp_w;
+        }
+
+        mAttacher.setMaximumScale(ratio_1x * 8);
+        mAttacher.setMediumScale(ratio_1x * 4);
+        mAttacher.setMinimumScale(ratio_1x);
+
+        final float zoom_1x = ratio_1x;
+        mAttacher.setOnMatrixChangeListener(new PhotoViewAttacher.OnMatrixChangedListener() {
+            @Override
+            public void onMatrixChanged(RectF rectF) {
+                m_txtEnlargedScale.setText(String.format("Escala : %1$.1f x", mAttacher.getScale() / zoom_1x));
+            }
+        });
+
+
+        m_imgEnlargedView.post(new Runnable() {
+            @Override
+            public void run() {
+                mAttacher.setScale(zoom_1x, false);
+            }
+        });
+
+        this.m_enlargedDialog.show();
+    }
+
+    /*
+     * Comprima la imagen y adjúntela a un correo electrónico
+     * utilizando un cliente de correo electrónico instalado.
+     */
+    private void sendImageInEmail(final ImageData imageData, final String fileName) {
+
+        Toast.makeText(this, "consumir soap sendImageInEmail", Toast.LENGTH_SHORT).show();
+
+        boolean created = false;
+        ArrayList ur = new ArrayList();
+        try {
+            {
+                File fp = new File(Environment.getExternalStorageDirectory().getPath() + "/" + fileName);
+                fp.createNewFile();
+
+                final FileOutputStream fstream = new FileOutputStream(fp);
+                final Bitmap bitmap = imageData.toBitmap();
+                bitmap.compress(CompressFormat.PNG, 100, fstream);
+                fstream.close();
+
+                ur.add(Uri.fromFile(fp));        // Result image
+            }
+
+            for (int i = 0; i < m_nSegmentImageArrayCount; i++) {
+                File fp = new File(Environment.getExternalStorageDirectory().getPath() + "/segment_" + i + "_" + fileName);
+                try {
+                    fp.createNewFile();
+
+                    final FileOutputStream fstream = new FileOutputStream(fp);
+                    final Bitmap bitmap = m_lastSegmentImages[i].toBitmap();
+                    bitmap.compress(CompressFormat.PNG, 100, fstream);
+                    fstream.close();
+
+                    ur.add(Uri.fromFile(fp));
+                } catch (IOException ioe) {
+                    Toast.makeText(getApplicationContext(), "No se pudo crear una imagen para el correo electrónico", Toast.LENGTH_LONG).show();
+                }
+            }
+
+            created = true;
+        } catch (IOException ioe) {
+            Toast.makeText(getApplicationContext(), "No se pudo crear una imagen para el correo electrónico", Toast.LENGTH_LONG).show();
+        }
+
+
+        /* Si el archivo fue creado, envíe el correo electrónico. */
+        if (created) {
+            attachAndSendEmail(ur, "Fingerprint Image", fileName);
+        }
+    }
+
     /*
      * Adjunte el archivo a un correo electrónico y envíelo.
      */
@@ -1907,7 +1902,47 @@ public class SecondFragment extends Fragment implements View.OnClickListener, Ad
             showToastOnUiThread("No hay clientes de correo electrónico instalados", Toast.LENGTH_LONG);
         }
     }
-    
+
+    /*
+     * Solicitud de envío de correo electrónico con imagen.
+     */
+    private void promptForEmail(final ImageData imageData) {
+        /* El diálogo debe mostrarse desde el UI thread. */
+
+        Toast.makeText(this, "consumir soap promptForEmail", Toast.LENGTH_SHORT).show();
+
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                final LayoutInflater inflater = getLayoutInflater();
+                final View fileNameView = inflater.inflate(R.layout.file_name_dialog, null);
+                final AlertDialog.Builder builder = new AlertDialog.Builder(SimpleScanActivity.this)
+                        .setView(fileNameView)
+                        .setTitle("Ingrese el nombre del archivo")
+                        .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(final DialogInterface dialog, final int which) {
+                                final EditText text = (EditText) fileNameView.findViewById(R.id.file_name);
+                                final String fileName = text.getText().toString();
+
+                                /* E-mail image in background thread. */
+                                Thread threadEmail = new Thread() {
+                                    @Override
+                                    public void run() {
+                                        sendImageInEmail(imageData, fileName);
+                                    }
+                                };
+                                threadEmail.start();
+                            }
+                        })
+                        .setNegativeButton("Cancelar", null);
+                EditText text = (EditText) fileNameView.findViewById(R.id.file_name);
+                text.setText(FILE_NAME_DEFAULT + "." + "png");
+
+                builder.create().show();
+            }
+        });
+    }
 
     /*
      * Exit application.
@@ -1927,7 +1962,7 @@ public class SecondFragment extends Fragment implements View.OnClickListener, Ad
     /*
      * Handle haga clic en el botón "Start capture".
      */
-    private View.OnClickListener m_btnCaptureStartClickListener = new View.OnClickListener() {
+    private OnClickListener m_btnCaptureStartClickListener = new OnClickListener() {
         @Override
         public void onClick(final View v) {
             if (m_bInitializing)
@@ -1953,7 +1988,7 @@ public class SecondFragment extends Fragment implements View.OnClickListener, Ad
 
             if (getIBScanDevice() == null) {
                 m_bInitializing = true;
-                SecondFragment._InitializeDeviceThreadCallback thread = new SecondFragment._InitializeDeviceThreadCallback(m_nSelectedDevIndex - 1);
+                _InitializeDeviceThreadCallback thread = new _InitializeDeviceThreadCallback(m_nSelectedDevIndex - 1);
                 thread.start();
             } else {
                 OnMsg_CaptureSeqStart();
@@ -1966,7 +2001,7 @@ public class SecondFragment extends Fragment implements View.OnClickListener, Ad
     /*
      * Handle haga clic en el botón "Stop capture".
      */
-    private View.OnClickListener m_btnCaptureStopClickListener = new View.OnClickListener() {
+    private OnClickListener m_btnCaptureStopClickListener = new OnClickListener() {
         @Override
         public void onClick(final View v) {
             if (getIBScanDevice() == null)
@@ -1976,7 +2011,7 @@ public class SecondFragment extends Fragment implements View.OnClickListener, Ad
             try {
                 // Cancele la captura de la imagen para el dispositivo activo.
                 getIBScanDevice().cancelCaptureImage();
-                SecondFragment.CaptureInfo tmpInfo = new SecondFragment.CaptureInfo();
+                CaptureInfo tmpInfo = new CaptureInfo();
                 _SetLEDs(tmpInfo, __LED_COLOR_NONE__, false);
                 m_nCurrentCaptureStep = -1;
                 m_bNeedClearPlaten = false;
@@ -1996,7 +2031,7 @@ public class SecondFragment extends Fragment implements View.OnClickListener, Ad
     /*
      * Handlehaga clic en el spinner que determina los dispositivos USB.
      */
-    private AdapterView.OnItemSelectedListener m_cboUsbDevicesItemSelectedListener = new AdapterView.OnItemSelectedListener() {
+    private OnItemSelectedListener m_cboUsbDevicesItemSelectedListener = new OnItemSelectedListener() {
         @Override
         public void onItemSelected(final AdapterView<?> parent, final View view, final int pos,
                                    final long id) {
@@ -2013,7 +2048,7 @@ public class SecondFragment extends Fragment implements View.OnClickListener, Ad
     /*
      * Handle haga clic en el spinner que determina la captura de la Huella digital.
      */
-    private AdapterView.OnItemSelectedListener m_captureTypeItemSelectedListener = new AdapterView.OnItemSelectedListener() {
+    private OnItemSelectedListener m_captureTypeItemSelectedListener = new OnItemSelectedListener() {
         @Override
         public void onItemSelected(final AdapterView<?> parent, final View view, final int pos,
                                    final long id) {
@@ -2035,7 +2070,7 @@ public class SecondFragment extends Fragment implements View.OnClickListener, Ad
     /*
      * Ocultar el cuadro de diálogo ampliado, si existe.
      */
-    private View.OnClickListener m_btnCloseEnlargedDialogClickListener = new View.OnClickListener() {
+    private OnClickListener m_btnCloseEnlargedDialogClickListener = new OnClickListener() {
         @Override
         public void onClick(final View v) {
             if (m_enlargedDialog != null) {
@@ -2112,14 +2147,14 @@ public class SecondFragment extends Fragment implements View.OnClickListener, Ad
     }
 
     @Override
-    public void deviceImagePreviewAvailable(final IBScanDevice device, final IBScanDevice.ImageData image) {
+    public void deviceImagePreviewAvailable(final IBScanDevice device, final ImageData image) {
         OnMsg_DrawImage(device, image);
     }
 
     @Override
-    public void deviceFingerCountChanged(final IBScanDevice device, final IBScanDevice.FingerCountState fingerState) {
+    public void deviceFingerCountChanged(final IBScanDevice device, final FingerCountState fingerState) {
         if (m_nCurrentCaptureStep >= 0) {
-            SecondFragment.CaptureInfo info = m_vecCaptureSeq.elementAt(m_nCurrentCaptureStep);
+            CaptureInfo info = m_vecCaptureSeq.elementAt(m_nCurrentCaptureStep);
             if (fingerState == IBScanDevice.FingerCountState.NON_FINGER) {
                 _SetLEDs(info, __LED_COLOR_RED__, true);
             } else {
@@ -2129,7 +2164,7 @@ public class SecondFragment extends Fragment implements View.OnClickListener, Ad
     }
 
     @Override
-    public void deviceFingerQualityChanged(final IBScanDevice device, final IBScanDevice.FingerQualityState[] fingerQualities) {
+    public void deviceFingerQualityChanged(final IBScanDevice device, final FingerQualityState[] fingerQualities) {
         for (int i = 0; i < fingerQualities.length; i++) {
             m_FingerQuality[i] = fingerQualities[i];
         }
@@ -2138,7 +2173,7 @@ public class SecondFragment extends Fragment implements View.OnClickListener, Ad
     }
 
     @Override
-    public void deviceAcquisitionBegun(final IBScanDevice device, final IBScanDevice.ImageType imageType) {
+    public void deviceAcquisitionBegun(final IBScanDevice device, final ImageType imageType) {
         if (imageType.equals(IBScanDevice.ImageType.ROLL_SINGLE_FINGER)) {
             OnMsg_Beep(__BEEP_OK__);
             m_strImageMessage = "Cuando termine, quite el dedo del sensor";
@@ -2148,7 +2183,7 @@ public class SecondFragment extends Fragment implements View.OnClickListener, Ad
     }
 
     @Override
-    public void deviceAcquisitionCompleted(final IBScanDevice device, final IBScanDevice.ImageType imageType) {
+    public void deviceAcquisitionCompleted(final IBScanDevice device, final ImageType imageType) {
         if (imageType.equals(IBScanDevice.ImageType.ROLL_SINGLE_FINGER)) {
             OnMsg_Beep(__BEEP_OK__);
         } else {
@@ -2159,15 +2194,15 @@ public class SecondFragment extends Fragment implements View.OnClickListener, Ad
     }
 
     @Override
-    public void deviceImageResultAvailable(final IBScanDevice device, final IBScanDevice.ImageData image,
-                                           final IBScanDevice.ImageType imageType, final IBScanDevice.ImageData[] splitImageArray) {
+    public void deviceImageResultAvailable(final IBScanDevice device, final ImageData image,
+                                           final ImageType imageType, final ImageData[] splitImageArray) {
         /* TODO: ALTERNATIVELY, USE RESULTS IN THIS FUNCTION */
     }
 
     @Override
     public void deviceImageResultExtendedAvailable(IBScanDevice device, IBScanException imageStatus,
-                                                   final IBScanDevice.ImageData image, final IBScanDevice.ImageType imageType, final int detectedFingerCount,
-                                                   final IBScanDevice.ImageData[] segmentImageArray, final IBScanDevice.SegmentPosition[] segmentPositionArray) {
+                                                   final ImageData image, final ImageType imageType, final int detectedFingerCount,
+                                                   final ImageData[] segmentImageArray, final SegmentPosition[] segmentPositionArray) {
 
         m_savedData.imagePreviewImageClickable = true;
         m_imgPreview.setLongClickable(true);
@@ -2191,7 +2226,7 @@ public class SecondFragment extends Fragment implements View.OnClickListener, Ad
         if (imageStatus == null /*STATUS_OK*/ ||
                 imageStatus.getType().compareTo(IBScanException.Type.INVALID_PARAM_VALUE) > 0) {
             // Adquisición de imagen exitosa
-            SecondFragment.CaptureInfo info = m_vecCaptureSeq.elementAt(m_nCurrentCaptureStep);
+            CaptureInfo info = m_vecCaptureSeq.elementAt(m_nCurrentCaptureStep);
             _SetLEDs(info, __LED_COLOR_GREEN__, false);
 
             // Guardar imagen
@@ -2203,7 +2238,7 @@ public class SecondFragment extends Fragment implements View.OnClickListener, Ad
 				int returnVal = chooser.showSaveDialog(IBScanUltimate_Sample.this);
 
 				if (returnVal == JFileChooser.APPROVE_OPTION)
-				{
+				{						
 					_SetStatusBarMessage("Saving image...");
 					m_ImgSaveFolderName = chooser.getCurrentDirectory().toString() + File.separator + chooser.getSelectedFile().getName();
 					_SaveBitmapImage(image, info.fingerName);
@@ -2275,7 +2310,7 @@ public class SecondFragment extends Fragment implements View.OnClickListener, Ad
     }
 
     @Override
-    public void devicePlatenStateChanged(final IBScanDevice device, final IBScanDevice.PlatenState platenState) {
+    public void devicePlatenStateChanged(final IBScanDevice device, final PlatenState platenState) {
         if (platenState.equals(IBScanDevice.PlatenState.HAS_FINGERS))
             m_bNeedClearPlaten = true;
         else
@@ -2287,7 +2322,7 @@ public class SecondFragment extends Fragment implements View.OnClickListener, Ad
             _SetStatusBarMessage(m_strImageMessage);
         } else {
             if (m_nCurrentCaptureStep >= 0) {
-                SecondFragment.CaptureInfo info = m_vecCaptureSeq.elementAt(m_nCurrentCaptureStep);
+                CaptureInfo info = m_vecCaptureSeq.elementAt(m_nCurrentCaptureStep);
 
                 // Mostrar mensaje para adquisición de imágenes nuevamente
                 String strMessage = info.PreCaptureMessage;
@@ -2334,5 +2369,4 @@ public class SecondFragment extends Fragment implements View.OnClickListener, Ad
             e.printStackTrace();
         }
     }
- 
 }
