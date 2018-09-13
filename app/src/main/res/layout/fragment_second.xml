@@ -59,7 +59,7 @@
                 android:layout_height="wrap_content"
                 android:ems="10"
                 android:inputType="date"
-                android:hint="Fecha"
+                android:hint="Date"
                 android:textSize="20dp"
                 android:layout_marginStart="8dp"
                 app:layout_constraintLeft_toLeftOf="parent"
@@ -74,7 +74,7 @@
                 android:ems="10"
                 android:textSize="20dp"
                 android:inputType="time"
-                android:hint="Hora"
+                android:hint="Time"
                 android:layout_marginStart="8dp"
                 android:layout_marginTop="18dp"
                 app:layout_constraintTop_toBottomOf="@+id/et_mostrar_fecha_picker"
@@ -132,7 +132,7 @@
                     android:layout_alignParentRight="true"
                     android:layout_alignParentStart="true"
                     android:ems="20"
-                    android:hint="ADDRESS"
+                    android:hint="Address"
                     android:inputType="textPersonName"
                     />
                 <RadioGroup xmlns:android="http://schemas.android.com/apk/res/android"
@@ -152,7 +152,7 @@
                         android:layout_marginTop="10dp"
                         android:textColor="#08088A"
                         android:checked="true"
-                        android:text="Masculino" />
+                        android:text="Male" />
 
                     <RadioButton
                         android:id="@+id/radio_femenino"
@@ -163,7 +163,7 @@
                         android:layout_marginTop="10dp"
                         android:textColor="#08088A"
                         android:checked="false"
-                        android:text="Femenino" />
+                        android:text="Female" />
                 </RadioGroup>
                 <TextView
                     android:id="@+id/digital"
@@ -192,6 +192,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:textStyle="bold"
+                        android:layout_marginRight="20dp"
                         android:textSize="20dp"
                         android:layout_marginTop="10dp"
                         android:layout_marginBottom="10dp"
@@ -206,20 +207,20 @@
                         android:layout_toRightOf="@+id/spinnerDevice"/>
 
                     <Button android:id="@+id/BtnAceptar"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_below="@id/spinnerDevice"
-                        android:layout_alignParentLeft="true"
-                        android:text="Iniciar"
-                        android:textColor="#FFFFFF"
-                        android:background="#2E9AFE"/>
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@id/spinnerDevice"
+                    android:layout_alignParentLeft="true"
+                    android:text="Start"
+                    android:textColor="#FFFFFF"
+                    android:background="#2E9AFE"/>
 
                     <Button android:id="@+id/BtnAceptar2"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_below="@id/spinnerDevice"
                         android:layout_centerHorizontal="true"
-                        android:text="Detener"
+                        android:text="Stop"
                         android:textColor="#FFFFFF"
                         android:background="#2E9AFE"/>
 
@@ -227,12 +228,11 @@
                         android:id="@+id/msj"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Aqui va un mensaje"
+                        android:text="Message"
                         android:textSize="14dp"
                         android:layout_marginTop="10dp"
                         android:layout_below="@id/BtnAceptar" />
                 </RelativeLayout>
-
             </LinearLayout>
         </android.support.constraint.ConstraintLayout>
     </LinearLayout>
