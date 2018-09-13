@@ -5,16 +5,26 @@ import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.Spinner;
 
-public class ThirdFragment extends Fragment {
+import java.util.ArrayList;
+import java.util.List;
+
+public class ThirdFragment extends Fragment  {
 
     public ThirdFragment() {
         // Required empty public constructor
     }
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    public void onActivityCreated(Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+
+
+
+
     }
 
     @Override
@@ -24,4 +34,8 @@ public class ThirdFragment extends Fragment {
         return inflater.inflate(R.layout.fragment_third, container, false);
     }
 
+
+    public void onNothingSelected(AdapterView<?> arg0) {
+        // TODO Auto-generated method stub
+    }
 }

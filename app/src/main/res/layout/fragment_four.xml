@@ -27,7 +27,7 @@
                 android:layout_height="match_parent"
                 android:gravity="left"
                 android:paddingLeft="25sp"
-                android:text="REGISTER MOTHER"
+                android:text="REGISTER FATHER"
                 android:textColor="@color/colorPrimaryDark"
                 android:textIsSelectable="false"
                 android:textSize="18sp"
@@ -196,6 +196,16 @@
             android:paddingLeft="14dp"
             android:textColor="#ff000000"
             android:visibility="visible" />
+        <Button
+            android:id="@+id/save"
+            style="?android:attr/buttonBarButtonStyle"
+            android:layout_width="match_parent"
+            android:layout_marginTop="2dp"
+            android:layout_height="50dp"
+            android:text="Save"
+            android:textColor="#FFFF"
+            android:background="@color/colorPrimary"
+            />
     </LinearLayout>
 
 </LinearLayout>

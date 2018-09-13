@@ -45,8 +45,8 @@
                 android:layout_marginStart="8dp"
                 android:layout_marginTop="12dp"
                 android:ems="10"
-                android:hint="Fecha"
                 android:inputType="date"
+                android:hint="Date"
                 android:textSize="20dp"
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/textView" />
@@ -56,12 +56,12 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="8dp"
+                android:ems="10"
+                android:textSize="20dp"
+                android:inputType="time"
+                android:hint="Time"
                 android:layout_marginStart="8dp"
                 android:layout_marginTop="18dp"
-                android:ems="10"
-                android:hint="Hora"
-                android:inputType="time"
-                android:textSize="20dp"
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/et_mostrar_fecha_picker" />
 
@@ -116,7 +116,7 @@
                     android:layout_alignParentStart="true"
                     android:layout_marginTop="20dp"
                     android:ems="20"
-                    android:hint="ADDRESS"
+                    android:hint="Address"
                     android:inputType="textPersonName"
                     android:textSize="20dp" />
 
@@ -134,7 +134,7 @@
                         android:layout_marginRight="16dp"
                         android:layout_marginTop="10dp"
                         android:checked="true"
-                        android:text="Masculino"
+                        android:text="Male"
                         android:textColor="#08088A"
                         android:textSize="20dp"
                         android:textStyle="bold" />
@@ -221,7 +221,6 @@
                         android:text="Aqui va un mensaje"
                         android:textSize="14dp" />
                 </RelativeLayout>
-
             </LinearLayout>
         </android.support.constraint.ConstraintLayout>
     </LinearLayout>

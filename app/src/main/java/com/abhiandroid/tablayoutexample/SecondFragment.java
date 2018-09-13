@@ -341,7 +341,7 @@ public class SecondFragment extends Fragment implements View.OnClickListener, Ad
 
         // Spinner Drop down elements
         List<String> categories = new ArrayList<String>();
-
+        categories.add("Select a Country");
         categories.add("Italia");
         categories.add("Argentina");
         categories.add("México");
@@ -349,7 +349,7 @@ public class SecondFragment extends Fragment implements View.OnClickListener, Ad
         categories.add("Colombia");
 
         List<String> devices = new ArrayList<String>();
-        devices.add("Seleccione un dispositivo");
+        devices.add("Select a device");
         devices.add("Columbo");
         devices.add("Italia");
 

@@ -20,4 +20,7 @@
     <string name="frame_time_default">n/a</string>
     <string name="usb_device_name">Dispositivo : </string>
     <string name="capture_seq_name">Captura : </string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

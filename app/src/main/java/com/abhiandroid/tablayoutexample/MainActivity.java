@@ -9,12 +9,14 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.FrameLayout;
+import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity {
 
     FrameLayout simpleFrameLayout;
     TabLayout tabLayout;
     Registrant registrant;
+    Fragment fragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -24,6 +26,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         registrant = new Registrant();
 
+        initialize();
         // get the reference of FrameLayout and TabLayout
         simpleFrameLayout = (FrameLayout) findViewById(R.id.simpleFrameLayout);
         tabLayout = (TabLayout) findViewById(R.id.simpleTabLayout);
@@ -40,19 +43,23 @@ public class MainActivity extends AppCompatActivity {
         TabLayout.Tab thirdTab = tabLayout.newTab();
         thirdTab.setText("Step3"); // set the Text for the first Tab
         tabLayout.addTab(thirdTab); // add  the tab at in the TabLayout
+        // Create a new Tab named "Third"
+        TabLayout.Tab fourTab = tabLayout.newTab();
+        fourTab.setText("Step4"); // set the Text for the first Tab
+        tabLayout.addTab(fourTab); // add  the tab at in the TabLayout
 
-        FragmentManager fm = getSupportFragmentManager();
+        /*FragmentManager fm = getSupportFragmentManager();
         FragmentTransaction ft = fm.beginTransaction();
         ft.replace(R.id.simpleFrameLayout, new FirstFragment());
         ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
-        ft.commit();
+        ft.commit();*/
 
         // perform setOnTabSelectedListener event on TabLayout
         tabLayout.setOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
                 // get the current selected tab's position and replace the fragment accordingly
-                Fragment fragment = null;
+                 fragment = null;
                 switch (tab.getPosition()) {
                     case 0:
                         fragment = new FirstFragment();
@@ -62,6 +69,9 @@ public class MainActivity extends AppCompatActivity {
                         break;
                     case 2:
                         fragment = new ThirdFragment();
+                        break;
+                    case 3:
+                        fragment = new FourFragment();
                         break;
                 }
                 FragmentManager fm = getSupportFragmentManager();
@@ -81,5 +91,15 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
+    }
+
+    private void initialize() {
+
+        fragment = new FirstFragment();
+        FragmentManager fm = getSupportFragmentManager();
+        FragmentTransaction ft = fm.beginTransaction();
+        ft.replace(R.id.simpleFrameLayout, fragment);
+        ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
+        ft.commit();
     }
 }
