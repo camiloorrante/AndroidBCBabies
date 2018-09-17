@@ -53,31 +53,12 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
+import android.support.v4.app.Fragment;
 
-public class SecondFragment extends Fragment implements View.OnClickListener, AdapterView.OnItemSelectedListener,
+public class SecondFragment extends Fragment implements
         IBScanListener, IBScanDeviceListener {
     Button button;
     Button button2;
-
-    private static final String CERO = "0";
-    private static final String DOS_PUNTOS = ":";
-    private static final String BARRA = "/";
-
-    //Calendario para obtener fecha & hora
-    public final Calendar c = Calendar.getInstance();
-
-    //Fecha
-    final int mes = c.get(Calendar.MONTH);
-    final int dia = c.get(Calendar.DAY_OF_MONTH);
-    final int anio = c.get(Calendar.YEAR);
-
-    //Hora
-    final int hora = c.get(Calendar.HOUR_OF_DAY);
-    final int minuto = c.get(Calendar.MINUTE);
-
-    //Widgets
-    EditText etFecha, etHora;
-    ImageButton ibObtenerFecha, ibObtenerHora;
 
     // comienza las declaraciones del IBScan
     /* *********************************************************************************************
@@ -303,14 +284,7 @@ public class SecondFragment extends Fragment implements View.OnClickListener, Ad
 
         //return inflater.inflate(R.layout.fragment_second, container, false);
         View RootView = inflater.inflate(R.layout.fragment_second, container, false);
-        etFecha = (EditText) RootView.findViewById(R.id.et_mostrar_fecha_picker);
-        etHora = (EditText) RootView.findViewById(R.id.et_mostrar_hora_picker);
 
-        ibObtenerFecha = (ImageButton) RootView.findViewById(R.id.ib_obtener_fecha);
-        ibObtenerHora = (ImageButton) RootView.findViewById(R.id.ib_obtener_hora);
-
-        ibObtenerFecha.setOnClickListener(this);
-        ibObtenerHora.setOnClickListener(this);
 
         //_InitUIFields(RootView);
         /*InitUIFields*/
@@ -327,44 +301,6 @@ public class SecondFragment extends Fragment implements View.OnClickListener, Ad
 
         m_cboUsbDevices = (Spinner) RootView.findViewById(R.id.spinUsbDevices);
         /* */
-
-
-
-
-        // Spinner element
-        Spinner spinner = (Spinner) RootView.findViewById(R.id.spinner);
-        Spinner spinnerDevice = (Spinner) RootView.findViewById(R.id.spinUsbDevices);
-
-        // Spinner click listener
-        spinner.setOnItemSelectedListener(this);
-        spinnerDevice.setOnItemSelectedListener(this);
-
-        // Spinner Drop down elements
-        List<String> categories = new ArrayList<String>();
-        categories.add("Select a Country");
-        categories.add("Italia");
-        categories.add("Argentina");
-        categories.add("México");
-        categories.add("Uruguay");
-        categories.add("Colombia");
-
-        List<String> devices = new ArrayList<String>();
-        devices.add("Select a device");
-        devices.add("Columbo");
-        devices.add("Italia");
-
-        // Creating adapter for spinner
-        ArrayAdapter<String> dataAdapter = new ArrayAdapter<String>(getActivity(), android.R.layout.simple_spinner_item, categories);
-        ArrayAdapter<String> dataAdapter2 = new ArrayAdapter<String>(getActivity(), android.R.layout.simple_spinner_item, devices);
-
-        // Drop down layout style - list view with radio button
-        dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        dataAdapter2.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-
-        // attaching data adapter to spinner
-        spinner.setAdapter(dataAdapter);
-        spinnerDevice.setAdapter(dataAdapter2);
-
         // Inicializaciones de IBScan
         m_ibScan = IBScan.getInstance(getActivity().getApplicationContext());
         m_ibScan.setScanListener(this);
@@ -412,60 +348,8 @@ public class SecondFragment extends Fragment implements View.OnClickListener, Ad
 
         return RootView;
     }
-    @Override
-    public void onClick(View v) {
-        switch (v.getId()){
-            case R.id.ib_obtener_fecha:
-                obtenerFecha();
-                break;
-            case R.id.ib_obtener_hora:
-                obtenerHora();
-                break;
-        }
-    }
-
-    private void obtenerFecha(){
-        DatePickerDialog recogerFecha = new DatePickerDialog(getActivity(), new DatePickerDialog.OnDateSetListener() {
-
-            public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
-
-                final int mesActual = month + 1;
-
-                String diaFormateado = (dayOfMonth < 10)? CERO + String.valueOf(dayOfMonth):String.valueOf(dayOfMonth);
-                String mesFormateado = (mesActual < 10)? CERO + String.valueOf(mesActual):String.valueOf(mesActual);
-
-                etFecha.setText(diaFormateado + BARRA + mesFormateado + BARRA + year);
 
 
-            }
-        },anio, mes, dia);
-
-        recogerFecha.show();
-
-    }
-
-    private void obtenerHora(){
-        TimePickerDialog recogerHora = new TimePickerDialog(getActivity(), new TimePickerDialog.OnTimeSetListener() {
-
-            public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
-
-                String horaFormateada =  (hourOfDay < 9)? String.valueOf(CERO + hourOfDay) : String.valueOf(hourOfDay);
-                String minutoFormateado = (minute < 9)? String.valueOf(CERO + minute):String.valueOf(minute);
-
-                String AM_PM;
-                if(hourOfDay < 12) {
-                    AM_PM = "a.m.";
-                } else {
-                    AM_PM = "p.m.";
-                }
-
-                etHora.setText(horaFormateada + DOS_PUNTOS + minutoFormateado + " " + AM_PM);
-            }
-
-        }, hora, minuto, false);
-
-        recogerHora.show();
-    }
     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
         // On selecting a spinner item
         String item = parent.getItemAtPosition(position).toString();
