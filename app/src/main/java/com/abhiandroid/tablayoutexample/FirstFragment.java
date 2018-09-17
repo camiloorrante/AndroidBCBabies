@@ -44,11 +44,6 @@ public class FirstFragment extends Fragment {
         // Inflate the layout for this fragment
         View RootView = inflater.inflate(R.layout.fragment_first, container, false);
 
-        etxtMotherName =  (EditText) RootView.findViewById(R.id.edtxtMotherName);
-        etxFatherName = (EditText) RootView.findViewById(R.id.edtxtFatherName);
-        etxHospitalName = (EditText) RootView.findViewById(R.id.edtxthospitalName);
-        etxDoctorName = (EditText) RootView.findViewById(R.id.edtxtDoctorName);
-
         return RootView;
 
     }
@@ -74,7 +69,7 @@ public class FirstFragment extends Fragment {
     public void onPause() {
         super.onPause();
 
-        pauseListener.onFragmentOnePause(etxtMotherName.getText().toString(),etxFatherName.getText().toString()
-                , etxHospitalName.getText().toString(), etxDoctorName.getText().toString());
+        //pauseListener.onFragmentOnePause(etxtMotherName.getText().toString(),etxFatherName.getText().toString()
+          //      , etxHospitalName.getText().toString(), etxDoctorName.getText().toString());
     }
 }

@@ -19,7 +19,12 @@ import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
 import android.media.AudioManager;
 import android.media.ToneGenerator;
+import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.renderscript.ScriptGroup;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -43,9 +48,15 @@ import com.integratedbiometrics.ibscanultimate.IBScanDeviceListener;
 import com.integratedbiometrics.ibscanultimate.IBScanException;
 import com.integratedbiometrics.ibscanultimate.IBScanListener;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -57,6 +68,7 @@ import java.util.Vector;
 public class FourFragment extends Fragment implements AdapterView.OnItemSelectedListener, View.OnClickListener,
                                                         IBScanListener, IBScanDeviceListener{
 
+    Button botonSave;
     // comienza las declaraciones del IBScan
     /* *********************************************************************************************
      * CONSTANTES PRIVADAS
@@ -254,18 +266,50 @@ public class FourFragment extends Fragment implements AdapterView.OnItemSelected
 
     // termina las declaraciones del IBScan
 
+
     public FourFragment() {
         // Required empty public constructor
     }
 
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState,LayoutInflater inflater, ViewGroup container) {
         super.onCreate(savedInstanceState);
+        View rootView =  inflater.inflate(R.layout.fragment_four, container, false);
+
+        botonSave = (Button)rootView.findViewById(R.id.save);
+        botonSave.setOnClickListener(new View.OnClickListener() {
+
+               public void onClick(View view) {
+                  HttpURLConnection urlConnection = null;
+                   InputStream in = null;
+                   try {
+                       URL url = new URL("http://10.15.29.121:3000/API/babies/sample/2&test");
+                       urlConnection = (HttpURLConnection) url.openConnection();
+                        in = new BufferedInputStream(urlConnection.getInputStream());
+                   }  catch (IOException e) {
+                       e.printStackTrace();
+                   } finally {
+                           urlConnection.disconnect();
+                   }
+                   BufferedReader r = new BufferedReader(new InputStreamReader(in));
+                   StringBuilder total = new StringBuilder();
+                   String line;
+                   try{
+                       while ((line = r.readLine()) != null) {
+                           total.append(line).append('\n');
+
+                       }
+                       Log.d("Hola", String.valueOf(total));
+                   } catch (IOException e) {
+                       e.printStackTrace();
+                   }
+               }
+        });
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+
         // Inflate the layout for this fragment
 
         //return inflater.inflate(R.layout.fragment_second, container, false);

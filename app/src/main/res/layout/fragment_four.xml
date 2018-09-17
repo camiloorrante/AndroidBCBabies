@@ -16,6 +16,7 @@
         android:layout_marginTop="10dp"
         android:orientation="horizontal">
 
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -26,13 +27,77 @@
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:gravity="left"
-                android:paddingLeft="25sp"
+                android:paddingLeft="5sp"
                 android:text="REGISTER FATHER"
                 android:textColor="@color/colorPrimaryDark"
                 android:textIsSelectable="false"
                 android:textSize="18sp"
                 android:textStyle="bold" />
 
+            <EditText
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="5dp"
+                android:layout_marginRight="5dp"
+                android:hint="Name"
+                android:inputType="textPersonName"
+                android:textSize="20dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="5dp"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:id="@+id/img1"
+                    style="?android:attr/buttonBarButtonStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="80dp"
+                    android:layout_weight="0.5"
+                    android:background="@color/colorGrayLight"
+                    android:text="Start"
+                    android:textColor="#FFFF" />
+
+
+                <ImageView
+                    android:id="@+id/img2"
+                    style="?android:attr/buttonBarButtonStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="80dp"
+                    android:layout_marginLeft="20dp"
+                    android:layout_weight="0.5"
+                    android:background="@color/colorGrayLight"
+                    android:text="Stop"
+                    android:textColor="#FFFF" />
+            </LinearLayout>
+            <RelativeLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="5dp"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/capture1"
+                    android:layout_width="50dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="0.5"
+                    android:layout_below="@id/capture1"
+                    android:background="@drawable/camera"
+                    android:layout_marginLeft="50dp"
+                    android:textColor="#FFFF"
+                    android:layout_alignParentLeft="true" />
+
+                <Button
+                    android:id="@+id/capture2"
+                    android:layout_width="50dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="0.5"
+                    android:layout_marginRight="50dp"
+                    android:background="@drawable/camera"
+                    android:textColor="#FFFF"
+                    android:layout_alignParentRight="true" />
+            </RelativeLayout>
             <TextView
                 android:id="@+id/version"
                 android:layout_width="wrap_content"
@@ -45,6 +110,7 @@
                 android:textSize="12sp" />
         </LinearLayout>
     </LinearLayout>
+
 
     <LinearLayout
         android:layout_width="match_parent"
