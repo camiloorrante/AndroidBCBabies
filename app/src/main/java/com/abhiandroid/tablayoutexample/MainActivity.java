@@ -6,17 +6,19 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.FrameLayout;
 import java.net.HttpURLConnection;
 import android.widget.Toast;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements FirstFragment.OnPauseListener {
 
     FrameLayout simpleFrameLayout;
     TabLayout tabLayout;
     Registrant registrant;
+    FirstFragment firstFragment;
     Fragment fragment;
 
     @Override
@@ -49,11 +51,8 @@ public class MainActivity extends AppCompatActivity {
         fourTab.setText("Step4"); // set the Text for the first Tab
         tabLayout.addTab(fourTab); // add  the tab at in the TabLayout
 
-        /*FragmentManager fm = getSupportFragmentManager();
-        FragmentTransaction ft = fm.beginTransaction();
-        ft.replace(R.id.simpleFrameLayout, new FirstFragment());
-        ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
-        ft.commit();*/
+        firstFragment = new FirstFragment();
+        firstFragment.setRegistrant(registrant);
 
         // perform setOnTabSelectedListener event on TabLayout
         tabLayout.setOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
@@ -63,7 +62,9 @@ public class MainActivity extends AppCompatActivity {
                  fragment = null;
                 switch (tab.getPosition()) {
                     case 0:
-                        fragment = new FirstFragment();
+                        //firstFragment = new FirstFragment();
+                        //firstFragment.setRegistrant(registrant);
+                        fragment = firstFragment;
                         break;
                     case 1:
                         fragment = new SecondFragment();
@@ -104,4 +105,14 @@ public class MainActivity extends AppCompatActivity {
         ft.commit();
     }
 
+    @Override
+    public void onFragmentOnePause(String hospitalName, String doctorName, String date, String hour,
+                                   String country, String address) {
+        registrant.setStep1_hospital(hospitalName);
+        registrant.setStep1_doctor(doctorName);
+        registrant.setStep1_date(date);
+        registrant.setStep1_hour(hour);
+        registrant.setStep1_country(country);
+        registrant.setStep1_address(address);
+    }
 }

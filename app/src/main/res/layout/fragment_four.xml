@@ -78,11 +78,11 @@
                 android:orientation="horizontal">
 
                 <Button
-                    android:id="@+id/capture1"
+                    android:id="@+id/btnCaptureIneFront"
                     android:layout_width="50dp"
                     android:layout_height="40dp"
                     android:layout_weight="0.5"
-                    android:layout_below="@id/capture1"
+                    android:layout_below="@id/btnCaptureIneFront"
                     android:background="@drawable/camera"
                     android:layout_marginLeft="50dp"
                     android:textColor="#FFFF"

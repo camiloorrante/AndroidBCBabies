@@ -19,7 +19,9 @@ import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
 import android.media.AudioManager;
 import android.media.ToneGenerator;
+import android.content.Context;
 import android.os.Bundle;
+import android.provider.DocumentsContract;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -54,8 +56,26 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
 import android.support.v4.app.Fragment;
+import android.widget.EditText;
+import android.widget.Spinner;
+import android.widget.TextView;
+
 
 public class FirstFragment extends Fragment implements View.OnClickListener, AdapterView.OnItemSelectedListener{
+    public interface OnPauseListener{
+        void onFragmentOnePause(String hospitalName, String doctorName, String date, String Time,
+                                String country, String address);
+    }
+
+    OnPauseListener pauseListener;
+    EditText etxHospitalName;
+    EditText etxDoctorName;
+    EditText etxDate;
+    EditText etxTime;
+    Spinner sprCountry;
+    EditText etxAddress;
+    Registrant registrant;
+
     Button button;
     Button button2;
 
@@ -76,12 +96,15 @@ public class FirstFragment extends Fragment implements View.OnClickListener, Ada
     final int minuto = c.get(Calendar.MINUTE);
 
     //Widgets
-    EditText etFecha, etHora;
     ImageButton ibObtenerFecha, ibObtenerHora;
 
 
     public FirstFragment() {
         // Required empty public constructor
+    }
+
+    public void setRegistrant(Registrant registrant) {
+        this.registrant = registrant;
     }
 
     @Override
@@ -105,12 +128,16 @@ public class FirstFragment extends Fragment implements View.OnClickListener, Ada
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        Log.d("PTM", "si esta creando la vista");
 
         //return inflater.inflate(R.layout.fragment_second, container, false);
         View RootView = inflater.inflate(R.layout.fragment_first, container, false);
-        etFecha = (EditText) RootView.findViewById(R.id.et_mostrar_fecha_picker);
-        etHora = (EditText) RootView.findViewById(R.id.et_mostrar_hora_picker);
+
+        etxHospitalName = (EditText) RootView.findViewById(R.id.hospital);
+        etxDoctorName = (EditText) RootView.findViewById(R.id.doctor);
+        etxDate = (EditText) RootView.findViewById(R.id.date);
+        etxTime = (EditText) RootView.findViewById(R.id.time);
+        sprCountry= (Spinner) RootView.findViewById(R.id.sprCountry);
+        etxAddress  = (EditText) RootView.findViewById(R.id.eaddress);
 
         ibObtenerFecha = (ImageButton) RootView.findViewById(R.id.ib_obtener_fecha);
         ibObtenerHora = (ImageButton) RootView.findViewById(R.id.ib_obtener_hora);
@@ -119,7 +146,7 @@ public class FirstFragment extends Fragment implements View.OnClickListener, Ada
         ibObtenerHora.setOnClickListener(this);
 
         // Spinner element
-        Spinner spinner = (Spinner) RootView.findViewById(R.id.spinner);
+        Spinner spinner = (Spinner) RootView.findViewById(R.id.sprCountry);
 
         // Spinner click listener
         spinner.setOnItemSelectedListener(this);
@@ -166,7 +193,7 @@ public class FirstFragment extends Fragment implements View.OnClickListener, Ada
                 String diaFormateado = (dayOfMonth < 10)? CERO + String.valueOf(dayOfMonth):String.valueOf(dayOfMonth);
                 String mesFormateado = (mesActual < 10)? CERO + String.valueOf(mesActual):String.valueOf(mesActual);
 
-                etFecha.setText(diaFormateado + BARRA + mesFormateado + BARRA + year);
+                etxDate.setText(diaFormateado + BARRA + mesFormateado + BARRA + year);
 
 
             }
@@ -191,7 +218,7 @@ public class FirstFragment extends Fragment implements View.OnClickListener, Ada
                     AM_PM = "p.m.";
                 }
 
-                etHora.setText(horaFormateada + DOS_PUNTOS + minutoFormateado + " " + AM_PM);
+                 etxTime.setText(horaFormateada + DOS_PUNTOS + minutoFormateado + " " + AM_PM);
             }
 
         }, hora, minuto, false);
@@ -207,5 +234,31 @@ public class FirstFragment extends Fragment implements View.OnClickListener, Ada
     @Override
     public void onNothingSelected(AdapterView<?> adapterView) {
 
+    }
+
+    @Override
+    public void onAttach(Context context){
+        super.onAttach(context);
+        Activity activity;
+        if (context instanceof Activity)
+            activity = (Activity) context;
+        else
+            activity = null;
+
+        try{
+            pauseListener = (OnPauseListener)activity;
+        }
+        catch (ClassCastException ex){
+            throw new ClassCastException(activity.toString() + "must implement OnPauseListener");
+        }
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+
+        pauseListener.onFragmentOnePause(etxHospitalName.getText().toString(), etxDoctorName.getText().toString(),
+                                        etxDate.getText().toString(), etxTime.getText().toString(),
+                                        /*sprCountry.getSelectedItem().toString()*/"", etxAddress.getText().toString());
     }
 }

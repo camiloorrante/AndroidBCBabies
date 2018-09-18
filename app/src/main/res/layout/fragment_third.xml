@@ -50,7 +50,7 @@
                 android:orientation="horizontal">
 
                 <ImageView
-                    android:id="@+id/img1"
+                    android:id="@+id/imgIneFront"
                     style="?android:attr/buttonBarButtonStyle"
                     android:layout_width="wrap_content"
                     android:layout_height="80dp"
@@ -61,7 +61,7 @@
 
 
                 <ImageView
-                    android:id="@+id/img2"
+                    android:id="@+id/imgIneBack"
                     style="?android:attr/buttonBarButtonStyle"
                     android:layout_width="wrap_content"
                     android:layout_height="80dp"
@@ -78,25 +78,25 @@
                 android:orientation="horizontal">
 
                 <Button
-                    android:id="@+id/capture1"
+                    android:id="@+id/btnCaptureIneFront"
                     android:layout_width="50dp"
                     android:layout_height="40dp"
                     android:layout_weight="0.5"
-                    android:layout_below="@id/capture1"
+                    android:layout_below="@id/btnCaptureIneFront"
                     android:background="@drawable/camera"
                     android:layout_marginLeft="50dp"
                     android:textColor="#FFFF"
                     android:layout_alignParentLeft="true" />
 
                 <Button
-                    android:id="@+id/capture2"
+                    android:id="@+id/btnCaptureIneBack"
                     android:layout_width="50dp"
                     android:layout_height="40dp"
-                    android:layout_weight="0.5"
+                    android:layout_alignParentRight="true"
                     android:layout_marginRight="50dp"
+                    android:layout_weight="0.5"
                     android:background="@drawable/camera"
-                    android:textColor="#FFFF"
-                    android:layout_alignParentRight="true" />
+                    android:textColor="#FFFF" />
             </RelativeLayout>
             <TextView
                 android:id="@+id/version"

@@ -5,12 +5,12 @@ public class Registrant {
     private String step1_fatherName;
     private String step1_hospital;
     private String step1_doctor;
-    private String step2_date;
-    private String step2_hour;
-    private String step2_country;
-    private String step2_address;
+    private String step1_date;
+    private String step1_hour;
+    private String step1_country;
+    private String step1_address;
     private String step2_gender;
-    private String step2_newbornFiger;
+    private String step2_newbornFinger;
     private String step3_motherFinger;
     private String step4_fatherFinger;
 
@@ -38,36 +38,36 @@ public class Registrant {
         this.step1_doctor = step1_doctor;
     }
 
-    public String getStep2_date() {
-        return step2_date;
+    public String getStep1_date() {
+        return step1_date;
     }
 
-    public void setStep2_date(String step2_date) {
-        this.step2_date = step2_date;
+    public void setStep1_date(String step1_date) {
+        this.step1_date = step1_date;
     }
 
-    public String getStep2_hour() {
-        return step2_hour;
+    public String getStep1_hour() {
+        return step1_hour;
     }
 
-    public void setStep2_hour(String step2_hour) {
-        this.step2_hour = step2_hour;
+    public void setStep1_hour(String step1_hour) {
+        this.step1_hour = step1_hour;
     }
 
-    public String getStep2_country() {
-        return step2_country;
+    public String getStep1_country() {
+        return step1_country;
     }
 
-    public void setStep2_country(String step2_country) {
-        this.step2_country = step2_country;
+    public void setStep1_country(String step1_country) {
+        this.step1_country = step1_country;
     }
 
-    public String getStep2_address() {
-        return step2_address;
+    public String getStep1_address() {
+        return step1_address;
     }
 
-    public void setStep2_address(String step2_address) {
-        this.step2_address = step2_address;
+    public void setStep1_address(String step1_address) {
+        this.step1_address = step1_address;
     }
 
     public String getStep2_gender() {
@@ -78,12 +78,12 @@ public class Registrant {
         this.step2_gender = step2_gender;
     }
 
-    public String getStep2_newbornFiger() {
-        return step2_newbornFiger;
+    public String getStep2_newbornFinger() {
+        return step2_newbornFinger;
     }
 
-    public void setStep2_newbornFiger(String step2_newbornFiger) {
-        this.step2_newbornFiger = step2_newbornFiger;
+    public void setStep2_newbornFiger(String step2_newbornFinger) {
+        this.step2_newbornFinger = step2_newbornFinger;
     }
 
     public String getStep3_motherFinger() {

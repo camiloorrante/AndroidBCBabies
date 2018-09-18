@@ -12,6 +12,7 @@ import android.content.Intent;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -19,8 +20,10 @@ import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
 import android.media.AudioManager;
 import android.media.ToneGenerator;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.util.Base64;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -46,14 +49,19 @@ import com.integratedbiometrics.ibscanultimate.IBScanListener;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
-import android.support.v4.app.Fragment;
+import java.io.ByteArrayOutputStream;
+import java.nio.charset.StandardCharsets;
 
 public class SecondFragment extends Fragment implements
         IBScanListener, IBScanDeviceListener {
@@ -179,14 +187,11 @@ public class SecondFragment extends Fragment implements
 
     private TextView m_txtStatusMessage;
     private ImageView m_imgPreview;
-    private ImageView m_imgEnlargedView;
     private Spinner m_cboUsbDevices;
     private Button m_btnCaptureStart;
     private Button m_btnCaptureStop;
-    private Button m_btnCloseEnlargedDialog;
     private Dialog m_enlargedDialog;
     private Bitmap m_BitmapImage;
-    private TextView m_txtEnlargedScale;
 
     /* *********************************************************************************************
      * CAMPOS PRIVADOS
@@ -262,17 +267,6 @@ public class SecondFragment extends Fragment implements
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        //etFecha = (EditText) getView().findViewById(R.id.et_mostrar_fecha_picker);
-        /*
-        etHora = (EditText) getView().findViewById(R.id.et_mostrar_hora_picker);
-
-        ibObtenerFecha = (ImageButton) getView().findViewById(R.id.ib_obtener_fecha);
-        ibObtenerHora = (ImageButton) getView().findViewById(R.id.ib_obtener_hora);
-
-        ibObtenerFecha.setOnClickListener(this);
-        ibObtenerHora.setOnClickListener(this);
-        */
 
     }
 
@@ -893,70 +887,6 @@ public class SecondFragment extends Fragment implements
 
         m_nCurrentCaptureStep = -1;
         m_bInitializing = false;
-    }
-
-    protected void _SaveBitmapImage(IBScanDevice.ImageData image, String fingerName) {
-/*		String filename = m_ImgSaveFolderName + ".bmp";
-
-		try
-	{
-			image.saveToFile(filename, "BMP");
-	}
-		catch(IOException e)
-	{
-			e.printStackTrace();
-	}
-*/
-    }
-
-    protected void _SaveWsqImage(IBScanDevice.ImageData image, String fingerName) {
-        String filename = m_ImgSaveFolderName + ".wsq";
-
-        try {
-            getIBScanDevice().wsqEncodeToFile(filename, image.buffer, image.width, image.height, image.pitch, image.bitsPerPixel, 500, 0.75, "");
-        } catch (IBScanException e) {
-            e.printStackTrace();
-        }
-    }
-
-    protected void _SavePngImage(IBScanDevice.ImageData image, String fingerName) {
-        String filename = m_ImgSaveFolderName + ".png";
-
-        File file = new File(filename);
-        FileOutputStream filestream = null;
-
-        try {
-            filestream = new FileOutputStream(file);
-            final Bitmap bitmap = image.toBitmap();
-            bitmap.compress(Bitmap.CompressFormat.PNG, 100, filestream);
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                filestream.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    protected void _SaveJP2Image(IBScanDevice.ImageData image, String fingerName) {
-/*		String filename = m_ImgSaveFolderName + ".jp2";
-
-		try
-	{
-			getIBScanDevice().SaveJP2Image(filename, image.buffer, image.width, image.height, image.pitch, image.resolutionX, image.resolutionY , 80);
-	}
-		catch (IBScanException e)
-	{
-			e.printStackTrace();
-	}
-		catch( StackOverflowError e)
-	{
-			System.out.println("Exception :"+ e);
-			e.printStackTrace();
-	}
-*/
     }
 
     public void _SetLEDs(SecondFragment.CaptureInfo info, int ledColor, boolean bBlink) {
@@ -2046,6 +1976,30 @@ public class SecondFragment extends Fragment implements
     public void deviceImageResultAvailable(final IBScanDevice device, final IBScanDevice.ImageData image,
                                            final IBScanDevice.ImageType imageType, final IBScanDevice.ImageData[] splitImageArray) {
         /* TODO: ALTERNATIVELY, USE RESULTS IN THIS FUNCTION */
+        Bitmap bm = image.toBitmap();
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        bm.compress(Bitmap.CompressFormat.JPEG, 100, baos); //bm is the bitmap object
+        byte[] b = baos.toByteArray();
+
+        String encodedImage = Base64.encodeToString(b, Base64.DEFAULT);
+
+        try{
+            MessageDigest md = MessageDigest.getInstance( "SHA-256" );
+
+            // Change this to UTF-16 if needed
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                md.update( encodedImage.getBytes( StandardCharsets.UTF_8 ) );
+            }
+            byte[] digest = md.digest();
+
+            String hex = String.format( "%064x", new BigInteger( 1, digest ) );
+            Log.d("imagen", hex);
+        } catch ( NoSuchAlgorithmException ex ){
+            showToastOnUiThread(ex.getMessage(),Toast.LENGTH_SHORT);
+        }
+
+
+
     }
 
     @Override
