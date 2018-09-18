@@ -3,25 +3,29 @@ package com.abhiandroid.tablayoutexample;
 import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
+import android.provider.DocumentsContract;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
+import android.widget.Spinner;
 import android.widget.TextView;
 
 public class FirstFragment extends Fragment {
     OnPauseListener pauseListener;
-    EditText etxtMotherName;
-    EditText etxFatherName;
     EditText etxHospitalName;
     EditText etxDoctorName;
+    EditText etxDate;
+    EditText etxTime;
+    Spinner sprCountry;
+    EditText etxAddress;
     Registrant registrant;
 
     public interface OnPauseListener{
-        void onFragmentOnePause(String motherName, String fatherName,
-                                String hospitalName, String doctorName);
+        void onFragmentOnePause(String hospitalName, String doctorName, String date, String Time,
+                                String country, String address);
     }
 
     public FirstFragment() {
@@ -43,6 +47,12 @@ public class FirstFragment extends Fragment {
 
         // Inflate the layout for this fragment
         View RootView = inflater.inflate(R.layout.fragment_first, container, false);
+        etxHospitalName = (EditText) RootView.findViewById(R.id.hospital);
+        etxDoctorName = (EditText) RootView.findViewById(R.id.doctor);
+        etxDate = (EditText) RootView.findViewById(R.id.date);
+        etxTime = (EditText) RootView.findViewById(R.id.time);
+        sprCountry= (Spinner) RootView.findViewById(R.id.sprCountry);
+        etxAddress  = (EditText) RootView.findViewById(R.id.eaddress);
 
         return RootView;
 
@@ -69,7 +79,8 @@ public class FirstFragment extends Fragment {
     public void onPause() {
         super.onPause();
 
-        //pauseListener.onFragmentOnePause(etxtMotherName.getText().toString(),etxFatherName.getText().toString()
-          //      , etxHospitalName.getText().toString(), etxDoctorName.getText().toString());
+        pauseListener.onFragmentOnePause(etxHospitalName.getText().toString(), etxDoctorName.getText().toString(),
+                                        etxDate.getText().toString(), etxTime.getText().toString(),
+                                        /*sprCountry.getSelectedItem().toString()*/"", etxAddress.getText().toString());
     }
 }

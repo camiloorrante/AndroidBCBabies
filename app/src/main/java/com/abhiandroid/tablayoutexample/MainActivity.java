@@ -106,10 +106,13 @@ public class MainActivity extends AppCompatActivity implements FirstFragment.OnP
     }
 
     @Override
-    public void onFragmentOnePause(String motherName, String fatherName, String hospitalName, String doctorName) {
-        registrant.setStep1_motherName(motherName);
-        registrant.setStep1_fatherName(fatherName);
+    public void onFragmentOnePause(String hospitalName, String doctorName, String date, String hour,
+                                   String country, String address) {
         registrant.setStep1_hospital(hospitalName);
         registrant.setStep1_doctor(doctorName);
+        registrant.setStep1_date(date);
+        registrant.setStep1_hour(hour);
+        registrant.setStep1_country(country);
+        registrant.setStep1_address(address);
     }
 }

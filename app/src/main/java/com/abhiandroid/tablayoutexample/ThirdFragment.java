@@ -12,6 +12,7 @@ import android.content.Intent;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -20,6 +21,8 @@ import android.hardware.usb.UsbManager;
 import android.media.AudioManager;
 import android.media.ToneGenerator;
 import android.os.Bundle;
+import android.provider.DocumentsContract;
+import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -43,6 +46,8 @@ import com.integratedbiometrics.ibscanultimate.IBScanDeviceListener;
 import com.integratedbiometrics.ibscanultimate.IBScanException;
 import com.integratedbiometrics.ibscanultimate.IBScanListener;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -55,6 +60,14 @@ import java.util.List;
 import java.util.Vector;
 
 public class ThirdFragment extends Fragment implements  AdapterView.OnItemSelectedListener, View.OnClickListener, IBScanListener, IBScanDeviceListener {
+    //Declaraciones BCBabies
+    Button btnCaptureIneFront;
+    Button btnCaptureIneBack;
+    ImageView imgIneFront;
+    ImageView imgIneBack;
+
+    private static final int CAPTURE_IMG_INE_FRONT_CODE = 2000;
+
 
     // comienza las declaraciones del IBScan
     /* *********************************************************************************************
@@ -261,10 +274,6 @@ public class ThirdFragment extends Fragment implements  AdapterView.OnItemSelect
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-
-
-
-
     }
 
     @Override
@@ -277,8 +286,7 @@ public class ThirdFragment extends Fragment implements  AdapterView.OnItemSelect
         // Inflate the layout for this fragment
         View RootView = inflater.inflate(R.layout.fragment_third, container, false);
 
-        /*InitUIFields*/
-
+        /*InitUIFields IBscan*/
         m_txtStatusMessage = (TextView) RootView.findViewById(R.id.txtStatusMessage);
         m_imgPreview = (ImageView) RootView.findViewById(R.id.imgPreview);
         m_imgPreview.setBackgroundColor(PREVIEW_IMAGE_BACKGROUND);
@@ -290,8 +298,6 @@ public class ThirdFragment extends Fragment implements  AdapterView.OnItemSelect
         m_btnCaptureStart.setOnClickListener(this.m_btnCaptureStartClickListener);
 
         m_cboUsbDevices = (Spinner) RootView.findViewById(R.id.spinUsbDevices);
-        /* */
-
         // Inicializaciones de IBScan
         m_ibScan = IBScan.getInstance(getActivity().getApplicationContext());
         m_ibScan.setScanListener(this);
@@ -299,11 +305,6 @@ public class ThirdFragment extends Fragment implements  AdapterView.OnItemSelect
         Resources r = Resources.getSystem();
         Configuration config = r.getConfiguration();
 
-        //setContentView(R.layout.ib_scan_port);
-
-
-        /*Inicializar campos de IU. */
-        //_InitUIFields();
 
         /*
          Asegúrese de que no haya dispositivos USB conectados que sean escáneres IB
@@ -335,9 +336,37 @@ public class ThirdFragment extends Fragment implements  AdapterView.OnItemSelect
         ThirdFragment._TimerTaskThreadCallback thread = new ThirdFragment._TimerTaskThreadCallback(__TIMER_STATUS_DELAY__);
         thread.start();
         // terminan inicializaciones del IBScan
+
+        /*NeoBcBabies Fields*/
+        btnCaptureIneFront = (Button) RootView.findViewById(R.id.btnCaptureIneFront);
+        btnCaptureIneBack = (Button) RootView.findViewById(R.id.btnCaptureIneBack);
+        imgIneFront = (ImageView) RootView.findViewById(R.id.imgIneFront);
+        imgIneBack = (ImageView) RootView.findViewById(R.id.imgIneBack);
+        /**/
+        btnCaptureIneFront.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                startActivityForResult(intent, CAPTURE_IMG_INE_FRONT_CODE);
+            }
+        });
+
         return RootView;
     }
 
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data){
+        if(requestCode == CAPTURE_IMG_INE_FRONT_CODE) {
+            Bitmap ineFrontBmb = (Bitmap) data.getExtras().get("data");
+            ByteArrayOutputStream  stream = new ByteArrayOutputStream();
+            ineFrontBmb.compress(Bitmap.CompressFormat.PNG, 100, stream);
+            byte[] byteArray = stream.toByteArray();
+            Bitmap bitmap = BitmapFactory.decodeByteArray(byteArray, 0,
+                    byteArray.length);
+
+            imgIneFront.setImageBitmap(bitmap);
+        }
+    };
 
     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
         // On selecting a spinner item
