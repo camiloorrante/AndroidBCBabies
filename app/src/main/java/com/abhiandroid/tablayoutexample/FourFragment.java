@@ -67,9 +67,19 @@ import java.util.Vector;
 
 public class FourFragment extends Fragment implements AdapterView.OnItemSelectedListener, View.OnClickListener,
                                                         IBScanListener, IBScanDeviceListener{
-
     Button botonSave;
-    // comienza las declaraciones del IBScan
+    EditText etFatherName;
+    ImageView ivIneFront;
+    ImageView ivIneBack;
+    String fingerPrintHash;
+    OnPauseListener onPauseListener;
+
+
+
+    public interface OnPauseListener{
+        void onFourthFragmentPause(String fatherName, String fingerPrintHash);
+    }
+    //region Declaraciones del IBScan
     /* *********************************************************************************************
      * CONSTANTES PRIVADAS
      ******************************************************************************************** */
@@ -264,11 +274,18 @@ public class FourFragment extends Fragment implements AdapterView.OnItemSelected
     // GLobal varias definiciones
     // ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    // termina las declaraciones del IBScan
+    //endregion Declaraciones del IBScan
 
 
     public FourFragment() {
         // Required empty public constructor
+    }
+
+    @Override
+    public void onPause(){
+        super.onPause();
+        onPauseListener.onFourthFragmentPause(etFatherName.getText().toString(), fingerPrintHash);
+
     }
 
     public void onCreate(Bundle savedInstanceState,LayoutInflater inflater, ViewGroup container) {
@@ -307,18 +324,31 @@ public class FourFragment extends Fragment implements AdapterView.OnItemSelected
     }
 
     @Override
+    public void onAttach(Context context){
+        super.onAttach(context);
+        Activity activity;
+        if (context instanceof Activity)
+            activity = (Activity) context;
+        else
+            activity = null;
+
+        try{
+            onPauseListener = (OnPauseListener)activity;
+        }
+        catch (ClassCastException ex){
+            throw new ClassCastException(activity.toString() + "must implement OnPauseListener");
+        }
+    }
+
+    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-
         // Inflate the layout for this fragment
-
-        //return inflater.inflate(R.layout.fragment_second, container, false);
         View RootView = inflater.inflate(R.layout.fragment_four, container, false);
 
-        //_InitUIFields(RootView);
-        /*InitUIFields*/
 
         m_txtStatusMessage = (TextView) RootView.findViewById(R.id.txtStatusMessage);
+        etFatherName = (EditText) RootView.findViewById(R.id.etFatherName);
         m_imgPreview = (ImageView) RootView.findViewById(R.id.imgPreview);
         m_imgPreview.setBackgroundColor(PREVIEW_IMAGE_BACKGROUND);
 
@@ -342,12 +372,6 @@ public class FourFragment extends Fragment implements AdapterView.OnItemSelected
 
         Resources r = Resources.getSystem();
         Configuration config = r.getConfiguration();
-
-        //setContentView(R.layout.ib_scan_port);
-
-
-        /*Inicializar campos de IU. */
-        //_InitUIFields();
 
         /*
          Asegúrese de que no haya dispositivos USB conectados que sean escáneres IB
@@ -396,7 +420,7 @@ public class FourFragment extends Fragment implements AdapterView.OnItemSelected
         // TODO Auto-generated method stub
     }
 
-    //metodos del IBScan
+    //region Metodos del IBScan
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
@@ -2255,5 +2279,6 @@ public class FourFragment extends Fragment implements AdapterView.OnItemSelected
             e.printStackTrace();
         }
     }
+    //endregion Metodos IBScan
 
 }

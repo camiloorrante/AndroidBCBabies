@@ -1,25 +1,34 @@
 package com.abhiandroid.tablayoutexample;
 
 public class Registrant {
-    private String step1_motherName;
-    private String step1_fatherName;
     private String step1_hospital;
     private String step1_doctor;
     private String step1_date;
     private String step1_hour;
     private String step1_country;
     private String step1_address;
+    private String step2_newBornName;
     private String step2_gender;
     private String step2_newbornFinger;
+    private String step3_motherName;
     private String step3_motherFinger;
+    private String step4_fatherName;
     private String step4_fatherFinger;
 
-    public String getStep1_fatherName() {
-        return step1_fatherName;
+    public String getStep2_newBornName() {
+        return step2_newBornName;
     }
 
-    public void setStep1_fatherName(String step1_fatherName) {
-        this.step1_fatherName = step1_fatherName;
+    public void setStep2_newBornName(String step2_newBornName) {
+        this.step2_newBornName = step2_newBornName;
+    }
+
+    public String getStep4_fatherName() {
+        return step4_fatherName;
+    }
+
+    public void setStep4_fatherName(String step4_fatherName) {
+        this.step4_fatherName = step4_fatherName;
     }
 
     public String getStep1_hospital() {
@@ -102,12 +111,12 @@ public class Registrant {
         this.step4_fatherFinger = step4_fatherFinger;
     }
 
-    public String getStep1_motherName() {
-        return step1_motherName;
+    public String getStep3_motherName() {
+        return step3_motherName;
     }
 
-    public void setStep1_motherName(String step1_motherName) {
-        this.step1_motherName = step1_motherName;
+    public void setStep3_motherName(String step3_motherName) {
+        this.step3_motherName = step3_motherName;
     }
 
 
