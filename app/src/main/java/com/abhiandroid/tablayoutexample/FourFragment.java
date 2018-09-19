@@ -57,6 +57,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLConnection;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -67,6 +68,24 @@ import java.util.Vector;
 
 public class FourFragment extends Fragment implements AdapterView.OnItemSelectedListener, View.OnClickListener,
                                                         IBScanListener, IBScanDeviceListener{
+    OnHeadlineSelectedListener mCallback;
+    // Container Activity must implement this interface
+    public interface OnHeadlineSelectedListener {
+        public void saveInfo();
+    }
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+
+        // This makes sure that the container activity has implemented
+        // the callback interface. If not, it throws an exception
+        try {
+            mCallback = (OnHeadlineSelectedListener) context;
+        } catch (ClassCastException e) {
+            throw new ClassCastException(context.toString()
+                    + " must implement OnHeadlineSelectedListener");
+        }
+    }
 
     Button botonSave;
     // comienza las declaraciones del IBScan
@@ -273,7 +292,7 @@ public class FourFragment extends Fragment implements AdapterView.OnItemSelected
 
     public void onCreate(Bundle savedInstanceState,LayoutInflater inflater, ViewGroup container) {
         super.onCreate(savedInstanceState);
-        View rootView =  inflater.inflate(R.layout.fragment_four, container, false);
+        /*View rootView =  inflater.inflate(R.layout.fragment_four, container, false);
 
         botonSave = (Button)rootView.findViewById(R.id.save);
         botonSave.setOnClickListener(new View.OnClickListener() {
@@ -303,18 +322,24 @@ public class FourFragment extends Fragment implements AdapterView.OnItemSelected
                        e.printStackTrace();
                    }
                }
-        });
+        });*/
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-
         // Inflate the layout for this fragment
-
         //return inflater.inflate(R.layout.fragment_second, container, false);
         View RootView = inflater.inflate(R.layout.fragment_four, container, false);
 
+        botonSave = (Button)RootView.findViewById(R.id.save);
+        botonSave.setOnClickListener(new View.OnClickListener() {
+
+            public void onClick(View view) {
+                mCallback.saveInfo();
+            }
+
+        });
         //_InitUIFields(RootView);
         /*InitUIFields*/
 

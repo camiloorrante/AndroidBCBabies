@@ -10,10 +10,20 @@ import android.util.Log;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.FrameLayout;
+
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLConnection;
+
 import android.widget.Toast;
 
-public class MainActivity extends AppCompatActivity implements FirstFragment.OnPauseListener {
+public class MainActivity extends AppCompatActivity implements FirstFragment.OnPauseListener, FourFragment.OnHeadlineSelectedListener {
 
     FrameLayout simpleFrameLayout;
     TabLayout tabLayout;
@@ -21,14 +31,16 @@ public class MainActivity extends AppCompatActivity implements FirstFragment.OnP
     FirstFragment firstFragment;
     Fragment fragment;
 
-    @Override
+    public void saveInfo() {
+        new CallApiTask().execute();
+    }
+
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,WindowManager.LayoutParams.FLAG_FULLSCREEN);
         this.requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.activity_main);
         registrant = new Registrant();
-
         initialize();
         // get the reference of FrameLayout and TabLayout
         simpleFrameLayout = (FrameLayout) findViewById(R.id.simpleFrameLayout);
