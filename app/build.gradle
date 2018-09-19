@@ -28,4 +28,5 @@ dependencies {
     implementation files('libs/libibscancommon.jar')
     implementation files('libs/libibscanultimatejni.jar')
     implementation files('libs/libusb.jar')
+    implementation 'com.android.volley:volley:1.1.1'
 }

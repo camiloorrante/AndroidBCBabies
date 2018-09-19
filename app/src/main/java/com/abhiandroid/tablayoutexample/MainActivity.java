@@ -20,8 +20,20 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.HashMap;
+import java.util.Map;
 
 import android.widget.Toast;
+
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
+
+import org.json.JSONObject;
 
 
 public class MainActivity extends AppCompatActivity implements FirstFragment.OnPauseListener,
@@ -32,9 +44,46 @@ public class MainActivity extends AppCompatActivity implements FirstFragment.OnP
     Registrant registrant;
     FirstFragment firstFragment;
     Fragment fragment;
+    RequestQueue requestQueue;
 
     public void saveInfo() {
-        new CallApiTask().execute();
+        final String url = "http://10.15.29.164:3000/API/babies/registerV2";
+
+        StringRequest postRequest = new StringRequest(Request.Method.POST, url,
+                new Response.Listener<String>()
+                {
+                    @Override
+                    public void onResponse(String response) {
+                        // response
+                        Log.d("Response", response);
+                    }
+                },
+                new Response.ErrorListener()
+                {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        // error
+                        Log.d("Error.Response", error.toString());
+                    }
+                }
+        ) {
+            @Override
+            protected Map<String, String> getParams()
+            {
+                Map<String, String>  params = new HashMap<String, String>();
+                params.put("name", "Alif");
+                params.put("domain", "http://itsalif.info");
+
+                return params;
+            }
+        };
+
+        // add it to the RequestQueue
+        requestQueue.add(postRequest);
+
+
+
+
     }
 
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,6 +92,7 @@ public class MainActivity extends AppCompatActivity implements FirstFragment.OnP
         this.requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.activity_main);
         registrant = new Registrant();
+        requestQueue = Volley.newRequestQueue(this);
         initialize();
         // get the reference of FrameLayout and TabLayout
         simpleFrameLayout = (FrameLayout) findViewById(R.id.simpleFrameLayout);
