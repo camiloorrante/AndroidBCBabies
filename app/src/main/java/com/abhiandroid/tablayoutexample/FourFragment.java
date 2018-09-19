@@ -68,27 +68,26 @@ import java.util.Vector;
 
 public class FourFragment extends Fragment implements AdapterView.OnItemSelectedListener, View.OnClickListener,
                                                         IBScanListener, IBScanDeviceListener{
+
     OnHeadlineSelectedListener mCallback;
     // Container Activity must implement this interface
     public interface OnHeadlineSelectedListener {
         public void saveInfo();
     }
-    @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-
-        // This makes sure that the container activity has implemented
-        // the callback interface. If not, it throws an exception
-        try {
-            mCallback = (OnHeadlineSelectedListener) context;
-        } catch (ClassCastException e) {
-            throw new ClassCastException(context.toString()
-                    + " must implement OnHeadlineSelectedListener");
-        }
-    }
 
     Button botonSave;
-    // comienza las declaraciones del IBScan
+    EditText etFatherName;
+    ImageView ivIneFront;
+    ImageView ivIneBack;
+    String fingerPrintHash;
+    OnPauseListener onPauseListener;
+
+
+
+    public interface OnPauseListener{
+        void onFourthFragmentPause(String fatherName, String fingerPrintHash);
+    }
+    //region Declaraciones del IBScan
     /* *********************************************************************************************
      * CONSTANTES PRIVADAS
      ******************************************************************************************** */
@@ -283,46 +282,49 @@ public class FourFragment extends Fragment implements AdapterView.OnItemSelected
     // GLobal varias definiciones
     // ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    // termina las declaraciones del IBScan
+    //endregion Declaraciones del IBScan
 
 
     public FourFragment() {
         // Required empty public constructor
     }
 
+    @Override
+    public void onPause(){
+        super.onPause();
+        onPauseListener.onFourthFragmentPause(etFatherName.getText().toString(), fingerPrintHash);
+
+    }
+
     public void onCreate(Bundle savedInstanceState,LayoutInflater inflater, ViewGroup container) {
         super.onCreate(savedInstanceState);
-        /*View rootView =  inflater.inflate(R.layout.fragment_four, container, false);
+    }
 
-        botonSave = (Button)rootView.findViewById(R.id.save);
-        botonSave.setOnClickListener(new View.OnClickListener() {
+    @Override
+    public void onAttach(Context context){
+        super.onAttach(context);
 
-               public void onClick(View view) {
-                  HttpURLConnection urlConnection = null;
-                   InputStream in = null;
-                   try {
-                       URL url = new URL("http://10.15.29.121:3000/API/babies/sample/2&test");
-                       urlConnection = (HttpURLConnection) url.openConnection();
-                        in = new BufferedInputStream(urlConnection.getInputStream());
-                   }  catch (IOException e) {
-                       e.printStackTrace();
-                   } finally {
-                           urlConnection.disconnect();
-                   }
-                   BufferedReader r = new BufferedReader(new InputStreamReader(in));
-                   StringBuilder total = new StringBuilder();
-                   String line;
-                   try{
-                       while ((line = r.readLine()) != null) {
-                           total.append(line).append('\n');
+        // This makes sure that the container activity has implemented
+        // the callback interface. If not, it throws an exception
+        try {
+            mCallback = (OnHeadlineSelectedListener) context;
+        } catch (ClassCastException e) {
+            throw new ClassCastException(context.toString()
+                    + " must implement OnHeadlineSelectedListener");
+        }
 
-                       }
-                       Log.d("Hola", String.valueOf(total));
-                   } catch (IOException e) {
-                       e.printStackTrace();
-                   }
-               }
-        });*/
+        Activity activity;
+        if (context instanceof Activity)
+            activity = (Activity) context;
+        else
+            activity = null;
+
+        try{
+            onPauseListener = (OnPauseListener)activity;
+        }
+        catch (ClassCastException ex){
+            throw new ClassCastException(activity.toString() + "must implement OnPauseListener");
+        }
     }
 
     @Override
@@ -344,6 +346,7 @@ public class FourFragment extends Fragment implements AdapterView.OnItemSelected
         /*InitUIFields*/
 
         m_txtStatusMessage = (TextView) RootView.findViewById(R.id.txtStatusMessage);
+        etFatherName = (EditText) RootView.findViewById(R.id.etFatherName);
         m_imgPreview = (ImageView) RootView.findViewById(R.id.imgPreview);
         m_imgPreview.setBackgroundColor(PREVIEW_IMAGE_BACKGROUND);
 
@@ -367,12 +370,6 @@ public class FourFragment extends Fragment implements AdapterView.OnItemSelected
 
         Resources r = Resources.getSystem();
         Configuration config = r.getConfiguration();
-
-        //setContentView(R.layout.ib_scan_port);
-
-
-        /*Inicializar campos de IU. */
-        //_InitUIFields();
 
         /*
          Asegúrese de que no haya dispositivos USB conectados que sean escáneres IB
@@ -421,7 +418,7 @@ public class FourFragment extends Fragment implements AdapterView.OnItemSelected
         // TODO Auto-generated method stub
     }
 
-    //metodos del IBScan
+    //region Metodos del IBScan
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
@@ -2280,5 +2277,6 @@ public class FourFragment extends Fragment implements AdapterView.OnItemSelected
             e.printStackTrace();
         }
     }
+    //endregion Metodos IBScan
 
 }

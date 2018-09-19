@@ -23,7 +23,9 @@ import java.net.URLConnection;
 
 import android.widget.Toast;
 
-public class MainActivity extends AppCompatActivity implements FirstFragment.OnPauseListener, FourFragment.OnHeadlineSelectedListener {
+
+public class MainActivity extends AppCompatActivity implements FirstFragment.OnPauseListener,
+        SecondFragment.OnPauseListener, ThirdFragment.OnPauseListener, FourFragment.OnPauseListener, FourFragment.OnHeadlineSelectedListener{
 
     FrameLayout simpleFrameLayout;
     TabLayout tabLayout;
@@ -37,7 +39,7 @@ public class MainActivity extends AppCompatActivity implements FirstFragment.OnP
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        //getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,WindowManager.LayoutParams.FLAG_FULLSCREEN);
         this.requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.activity_main);
         registrant = new Registrant();
@@ -118,7 +120,7 @@ public class MainActivity extends AppCompatActivity implements FirstFragment.OnP
     }
 
     @Override
-    public void onFragmentOnePause(String hospitalName, String doctorName, String date, String hour,
+    public void onFirstFragmentPause(String hospitalName, String doctorName, String date, String hour,
                                    String country, String address) {
         registrant.setStep1_hospital(hospitalName);
         registrant.setStep1_doctor(doctorName);
@@ -127,4 +129,26 @@ public class MainActivity extends AppCompatActivity implements FirstFragment.OnP
         registrant.setStep1_country(country);
         registrant.setStep1_address(address);
     }
+
+    @Override
+    public void onSecondFragmentPause(String newBornName, String fingerPrintHash, String gender) {
+        registrant.setStep2_newBornName(newBornName);
+        registrant.setStep2_gender(gender);
+        registrant.setStep2_newbornFiger(fingerPrintHash);
+    }
+
+    @Override
+    public void onThirdFragmentPause(String motherName, String fingerPrintHash) {
+        registrant.setStep3_motherName(motherName);
+        registrant.setStep3_motherFinger(fingerPrintHash);
+    }
+
+    @Override
+    public void onFourthFragmentPause(String fatherName, String fingerPrintHash) {
+        registrant.setStep4_fatherName(fatherName);
+        registrant.setStep4_fatherFinger(fingerPrintHash);
+
+    }
+
+
 }

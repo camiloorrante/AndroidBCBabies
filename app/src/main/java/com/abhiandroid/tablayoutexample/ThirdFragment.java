@@ -20,10 +20,12 @@ import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
 import android.media.AudioManager;
 import android.media.ToneGenerator;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
+import android.util.Base64;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -51,7 +53,11 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
@@ -59,17 +65,27 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
 
-public class ThirdFragment extends Fragment implements  AdapterView.OnItemSelectedListener, View.OnClickListener, IBScanListener, IBScanDeviceListener {
+public class ThirdFragment extends Fragment implements  AdapterView.OnItemSelectedListener, View.OnClickListener,
+        IBScanListener, IBScanDeviceListener {
     //Declaraciones BCBabies
     Button btnCaptureIneFront;
     Button btnCaptureIneBack;
     ImageView imgIneFront;
     ImageView imgIneBack;
+    EditText etxMotherName;
+    OnPauseListener onPauseListener;
+    String fingerPrintHash;
+
+
+    public interface OnPauseListener{
+        void onThirdFragmentPause(String motherName, String fingerPrintHash);
+    }
 
     private static final int CAPTURE_IMG_INE_FRONT_CODE = 2000;
+    private static final int CAPTURE_IMG_INE_BACK_CODE = 2001;
 
 
-    // comienza las declaraciones del IBScan
+    //region comienza las declaraciones del IBScan
     /* *********************************************************************************************
      * CONSTANTES PRIVADAS
      ******************************************************************************************** */
@@ -264,11 +280,35 @@ public class ThirdFragment extends Fragment implements  AdapterView.OnItemSelect
     // GLobal varias definiciones
     // ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    // termina las declaraciones del IBScan
+    //endregion termina las declaraciones del IBScan
 
 
     public ThirdFragment() {
         // Required empty public constructor
+    }
+
+    @Override
+    public void onPause(){
+        super.onPause();
+        onPauseListener.onThirdFragmentPause(etxMotherName.getText().toString(), fingerPrintHash);
+
+    }
+
+    @Override
+    public void onAttach(Context context){
+        super.onAttach(context);
+        Activity activity;
+        if (context instanceof Activity)
+            activity = (Activity) context;
+        else
+            activity = null;
+
+        try{
+            onPauseListener = (OnPauseListener)activity;
+        }
+        catch (ClassCastException ex){
+            throw new ClassCastException(activity.toString() + "must implement OnPauseListener");
+        }
     }
 
     @Override
@@ -285,6 +325,8 @@ public class ThirdFragment extends Fragment implements  AdapterView.OnItemSelect
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View RootView = inflater.inflate(R.layout.fragment_third, container, false);
+
+        etxMotherName = (EditText) RootView.findViewById(R.id.motherName);
 
         /*InitUIFields IBscan*/
         m_txtStatusMessage = (TextView) RootView.findViewById(R.id.txtStatusMessage);
@@ -374,7 +416,7 @@ public class ThirdFragment extends Fragment implements  AdapterView.OnItemSelect
 
     }
 
-    //metodos del IBScan
+    //region metodos del IBScan
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
@@ -2061,6 +2103,28 @@ public class ThirdFragment extends Fragment implements  AdapterView.OnItemSelect
     public void deviceImageResultAvailable(final IBScanDevice device, final IBScanDevice.ImageData image,
                                            final IBScanDevice.ImageType imageType, final IBScanDevice.ImageData[] splitImageArray) {
         /* TODO: ALTERNATIVELY, USE RESULTS IN THIS FUNCTION */
+        Bitmap bm = image.toBitmap();
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        bm.compress(Bitmap.CompressFormat.JPEG, 100, baos); //bm is the bitmap object
+        byte[] b = baos.toByteArray();
+
+        String encodedImage = Base64.encodeToString(b, Base64.DEFAULT);
+
+        try{
+            MessageDigest md = MessageDigest.getInstance( "SHA-256" );
+
+            // Change this to UTF-16 if needed
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                md.update( encodedImage.getBytes( StandardCharsets.UTF_8 ) );
+            }
+            byte[] digest = md.digest();
+
+            fingerPrintHash = String.format( "%064x", new BigInteger( 1, digest ) );
+            Log.d("imagen", encodedImage);
+        } catch ( NoSuchAlgorithmException ex ){
+            showToastOnUiThread(ex.getMessage(),Toast.LENGTH_SHORT);
+        }
+
     }
 
     @Override
@@ -2233,6 +2297,7 @@ public class ThirdFragment extends Fragment implements  AdapterView.OnItemSelect
             e.printStackTrace();
         }
     }
+    //endregion
 
 
     public void onNothingSelected(AdapterView<?> arg0) {

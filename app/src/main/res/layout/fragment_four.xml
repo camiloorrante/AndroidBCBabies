@@ -35,6 +35,7 @@
                 android:textStyle="bold" />
 
             <EditText
+                android:id="@+id/etFatherName"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="5dp"
@@ -50,7 +51,7 @@
                 android:orientation="horizontal">
 
                 <ImageView
-                    android:id="@+id/img1"
+                    android:id="@+id/imgIneFront"
                     style="?android:attr/buttonBarButtonStyle"
                     android:layout_width="wrap_content"
                     android:layout_height="80dp"
@@ -61,7 +62,7 @@
 
 
                 <ImageView
-                    android:id="@+id/img2"
+                    android:id="@+id/imgIneBack"
                     style="?android:attr/buttonBarButtonStyle"
                     android:layout_width="wrap_content"
                     android:layout_height="80dp"

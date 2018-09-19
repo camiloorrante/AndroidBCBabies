@@ -35,6 +35,8 @@ import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.TimePicker;
@@ -67,8 +69,18 @@ public class SecondFragment extends Fragment implements
         IBScanListener, IBScanDeviceListener {
     Button button;
     Button button2;
+    EditText etxNewBornName;
+    RadioGroup sexRadioGroup;
+    RadioButton rbMale, rbFemale;
+    String fingerPrintHash;
 
-    // comienza las declaraciones del IBScan
+    OnPauseListener onPauseListener;
+
+    public interface OnPauseListener {
+        void onSecondFragmentPause(String newBornName, String fingerPrintHash, String gender);
+    }
+
+    //region IBScan Declaraciones
     /* *********************************************************************************************
      * CONSTANTES PRIVADAS
      ******************************************************************************************** */
@@ -92,18 +104,6 @@ public class SecondFragment extends Fragment implements
 
     /* El color de fondo de la imagen de vista previa ImageView. */
     protected static final int PREVIEW_IMAGE_BACKGROUND = Color.LTGRAY;
-
-    /* El color de fondo de un TextView con calidad de dedo cuando el dedo no está presente. */
-    protected static final int FINGER_QUALITY_NOT_PRESENT_COLOR = Color.LTGRAY;
-
-    /* El color de fondo de un TextView con calidad de dedo cuando el dedo es de buena calidad. */
-    protected static final int FINGER_QUALITY_GOOD_COLOR = Color.GREEN;
-
-    /* El color de fondo de un TextView con calidad de dedo cuando el dedo es de buena calidad. */
-    protected static final int FINGER_QUALITY_FAIR_COLOR = Color.YELLOW;
-
-    /* el color de fondo de una calidad de dedo TextView cuando el dedo es de mala calidad. */
-    protected static final int FINGER_QUALITY_POOR_COLOR = Color.RED;
 
     protected final int __TIMER_STATUS_DELAY__ = 500;
 
@@ -259,11 +259,25 @@ public class SecondFragment extends Fragment implements
     // GLobal varias definiciones
     // ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    // termina las declaraciones del IBScan
+    //endregion termina las declaraciones del IBScan de
     public SecondFragment() {
         // Required empty public constructor
     }
- 
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        int selectedSexId = sexRadioGroup.getCheckedRadioButtonId();
+        String sex;
+        if (rbMale.getId() == selectedSexId){
+            sex = "masc";
+        }
+        else {
+            sex = "fem";
+        }
+        onPauseListener.onSecondFragmentPause(etxNewBornName.getText().toString(), fingerPrintHash, sex);
+    }
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -271,17 +285,28 @@ public class SecondFragment extends Fragment implements
     }
 
     @Override
+    public void onAttach(Context context){
+        super.onAttach(context);
+        Activity activity;
+        if (context instanceof Activity)
+            activity = (Activity) context;
+        else
+            activity = null;
+
+        try{
+            onPauseListener = (SecondFragment.OnPauseListener)activity;
+        }
+        catch (ClassCastException ex){
+            throw new ClassCastException(activity.toString() + "must implement OnPauseListener");
+        }
+    }
+
+    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        Log.d("PTM", "si esta creando la vista");
-
-        //return inflater.inflate(R.layout.fragment_second, container, false);
         View RootView = inflater.inflate(R.layout.fragment_second, container, false);
 
-
-        //_InitUIFields(RootView);
-        /*InitUIFields*/
 
         m_txtStatusMessage = (TextView) RootView.findViewById(R.id.txtStatusMessage);
         m_imgPreview = (ImageView) RootView.findViewById(R.id.imgPreview);
@@ -293,21 +318,18 @@ public class SecondFragment extends Fragment implements
         m_btnCaptureStart = (Button) RootView.findViewById(R.id.start_capture_btn);
         m_btnCaptureStart.setOnClickListener(this.m_btnCaptureStartClickListener);
 
+        etxNewBornName = (EditText) RootView.findViewById(R.id.enewBornName);
         m_cboUsbDevices = (Spinner) RootView.findViewById(R.id.spinUsbDevices);
+        sexRadioGroup = (RadioGroup) RootView.findViewById(R.id.rgSex);
+        rbMale = (RadioButton) RootView.findViewById(R.id.rbMale);
+        rbFemale = (RadioButton) RootView.findViewById(R.id.rbFemale);
         /* */
-        // Inicializaciones de IBScan
+        //region Inicializaciones de IBScan
         m_ibScan = IBScan.getInstance(getActivity().getApplicationContext());
         m_ibScan.setScanListener(this);
 
         Resources r = Resources.getSystem();
         Configuration config = r.getConfiguration();
-
-        //setContentView(R.layout.ib_scan_port);
-
-
-        /*Inicializar campos de IU. */
-        //_InitUIFields();
-
         /*
          Asegúrese de que no haya dispositivos USB conectados que sean escáneres IB
          para los que no se haya otorgado el permiso. Para cualquiera que se encuentre,
@@ -337,7 +359,7 @@ public class SecondFragment extends Fragment implements
 
         _TimerTaskThreadCallback thread = new _TimerTaskThreadCallback(__TIMER_STATUS_DELAY__);
         thread.start();
-        // terminan inicializaciones del IBScan
+        //endregion terminan inicializaciones del IBScan
 
 
         return RootView;
@@ -353,7 +375,7 @@ public class SecondFragment extends Fragment implements
         // TODO Auto-generated method stub
     }
 
-    //metodos del IBScan
+    //region IBScan methods
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
@@ -1992,14 +2014,11 @@ public class SecondFragment extends Fragment implements
             }
             byte[] digest = md.digest();
 
-            String hex = String.format( "%064x", new BigInteger( 1, digest ) );
-            Log.d("imagen", hex);
+            fingerPrintHash = String.format( "%064x", new BigInteger( 1, digest ) );
+            Log.d("imagen", encodedImage);
         } catch ( NoSuchAlgorithmException ex ){
             showToastOnUiThread(ex.getMessage(),Toast.LENGTH_SHORT);
         }
-
-
-
     }
 
     @Override
@@ -2172,5 +2191,6 @@ public class SecondFragment extends Fragment implements
             e.printStackTrace();
         }
     }
+    //endregion
  
 }

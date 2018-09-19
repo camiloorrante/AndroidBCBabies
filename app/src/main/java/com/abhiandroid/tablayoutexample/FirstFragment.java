@@ -63,7 +63,7 @@ import android.widget.TextView;
 
 public class FirstFragment extends Fragment implements View.OnClickListener, AdapterView.OnItemSelectedListener{
     public interface OnPauseListener{
-        void onFragmentOnePause(String hospitalName, String doctorName, String date, String Time,
+        void onFirstFragmentPause(String hospitalName, String doctorName, String date, String Time,
                                 String country, String address);
     }
 
@@ -110,18 +110,6 @@ public class FirstFragment extends Fragment implements View.OnClickListener, Ada
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        //etFecha = (EditText) getView().findViewById(R.id.et_mostrar_fecha_picker);
-        /*
-        etHora = (EditText) getView().findViewById(R.id.et_mostrar_hora_picker);
-
-        ibObtenerFecha = (ImageButton) getView().findViewById(R.id.ib_obtener_fecha);
-        ibObtenerHora = (ImageButton) getView().findViewById(R.id.ib_obtener_hora);
-
-        ibObtenerFecha.setOnClickListener(this);
-        ibObtenerHora.setOnClickListener(this);
-        */
-
     }
 
     @Override
@@ -257,8 +245,8 @@ public class FirstFragment extends Fragment implements View.OnClickListener, Ada
     public void onPause() {
         super.onPause();
 
-        pauseListener.onFragmentOnePause(etxHospitalName.getText().toString(), etxDoctorName.getText().toString(),
+        pauseListener.onFirstFragmentPause(etxHospitalName.getText().toString(), etxDoctorName.getText().toString(),
                                         etxDate.getText().toString(), etxTime.getText().toString(),
-                                        /*sprCountry.getSelectedItem().toString()*/"", etxAddress.getText().toString());
+                                        sprCountry.getSelectedItem().toString(), etxAddress.getText().toString());
     }
 }
