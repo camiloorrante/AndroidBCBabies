@@ -1,29 +1,11 @@
-package com.abhiandroid.tablayoutexample;
+package com.abhiandroid.bcbabies;
 
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.app.DatePickerDialog;
-import android.app.Dialog;
 import android.app.TimePickerDialog;
-import android.content.ActivityNotFoundException;
-import android.content.Context;
-import android.content.DialogInterface;
-import android.content.Intent;
-import android.content.res.Configuration;
-import android.content.res.Resources;
-import android.graphics.Bitmap;
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Paint;
-import android.hardware.usb.UsbDevice;
-import android.hardware.usb.UsbManager;
-import android.media.AudioManager;
-import android.media.ToneGenerator;
 import android.content.Context;
 import android.os.Bundle;
-import android.provider.DocumentsContract;
 import android.support.v4.app.Fragment;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -33,32 +15,12 @@ import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.Spinner;
-import android.widget.TextView;
 import android.widget.TimePicker;
-import android.widget.Toast;
 
-import com.integratedbiometrics.ibscanultimate.IBScan;
-import com.integratedbiometrics.ibscanultimate.IBScanDevice;
-import com.integratedbiometrics.ibscanultimate.IBScanDeviceListener;
-import com.integratedbiometrics.ibscanultimate.IBScanException;
-import com.integratedbiometrics.ibscanultimate.IBScanListener;
-
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Vector;
-import android.support.v4.app.Fragment;
-import android.widget.EditText;
-import android.widget.Spinner;
-import android.widget.TextView;
 
 
 public class FirstFragment extends Fragment implements View.OnClickListener, AdapterView.OnItemSelectedListener{

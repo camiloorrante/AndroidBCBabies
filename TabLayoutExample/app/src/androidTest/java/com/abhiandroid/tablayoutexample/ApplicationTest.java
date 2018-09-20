@@ -1,4 +1,4 @@
-package com.abhiandroid.tablayoutexample;
+package com.abhiandroid.bcbabies;
 
 import android.app.Application;
 import android.test.ApplicationTestCase;

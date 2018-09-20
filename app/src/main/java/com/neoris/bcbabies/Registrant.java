@@ -1,4 +1,4 @@
-package com.abhiandroid.tablayoutexample;
+package com.abhiandroid.bcbabies;
 
 public class Registrant {
     private String step1_hospital;

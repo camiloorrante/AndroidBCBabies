@@ -1,4 +1,4 @@
-package com.abhiandroid.tablayoutexample;
+package com.abhiandroid.bcbabies;
 
 import android.os.Bundle;
 import android.support.design.widget.TabLayout;

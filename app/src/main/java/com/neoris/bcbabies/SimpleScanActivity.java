@@ -1,5 +1,5 @@
 
-package com.abhiandroid.tablayoutexample;
+package com.abhiandroid.bcbabies;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -35,25 +35,19 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.view.Display;
 import android.view.LayoutInflater;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.view.View.OnLongClickListener;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.PopupMenu;
-import android.widget.PopupMenu.OnMenuItemClickListener;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.integratedbiometrics.ibscanultimate.IBScan;
-import com.integratedbiometrics.ibscanultimate.IBScan.SdkVersion;
 import com.integratedbiometrics.ibscanultimate.IBScanDevice;
 import com.integratedbiometrics.ibscanultimate.IBScanDevice.FingerCountState;
 import com.integratedbiometrics.ibscanultimate.IBScanDevice.FingerQualityState;
@@ -66,7 +60,6 @@ import com.integratedbiometrics.ibscanultimate.IBScanDevice.SegmentPosition;
 import com.integratedbiometrics.ibscanultimate.IBScanDeviceListener;
 import com.integratedbiometrics.ibscanultimate.IBScanException;
 import com.integratedbiometrics.ibscanultimate.IBScanListener;
-import com.abhiandroid.tablayoutexample.R;
 
 import uk.co.senab.photoview.PhotoViewAttacher;
 

@@ -1,10 +1,8 @@
-package com.abhiandroid.tablayoutexample;
+package com.abhiandroid.bcbabies;
 
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.DatePickerDialog;
 import android.app.Dialog;
-import android.app.TimePickerDialog;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -12,6 +10,7 @@ import android.content.Intent;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -19,13 +18,11 @@ import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
 import android.media.AudioManager;
 import android.media.ToneGenerator;
-import android.content.Context;
-import android.content.Intent;
-import android.net.Uri;
-import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
-import android.renderscript.ScriptGroup;
+import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
+import android.util.Base64;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -33,13 +30,10 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.DatePicker;
 import android.widget.EditText;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
-import android.widget.TimePicker;
 import android.widget.Toast;
 
 import com.integratedbiometrics.ibscanultimate.IBScan;
@@ -48,46 +42,41 @@ import com.integratedbiometrics.ibscanultimate.IBScanDeviceListener;
 import com.integratedbiometrics.ibscanultimate.IBScanException;
 import com.integratedbiometrics.ibscanultimate.IBScanListener;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.net.URLConnection;
+import java.math.BigInteger;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Vector;
 
-public class FourFragment extends Fragment implements AdapterView.OnItemSelectedListener, View.OnClickListener,
-                                                        IBScanListener, IBScanDeviceListener{
-
-    OnHeadlineSelectedListener mCallback;
-    // Container Activity must implement this interface
-    public interface OnHeadlineSelectedListener {
-        public void saveInfo();
-    }
-
-    Button botonSave;
-    EditText etFatherName;
-    ImageView ivIneFront;
-    ImageView ivIneBack;
-    String fingerPrintHash;
+public class ThirdFragment extends Fragment implements  AdapterView.OnItemSelectedListener, View.OnClickListener,
+        IBScanListener, IBScanDeviceListener {
+    //Declaraciones BCBabies
+    Button btnCaptureIneFront;
+    Button btnCaptureIneBack;
+    ImageView imgIneFront;
+    ImageView imgIneBack;
+    EditText etxMotherName;
     OnPauseListener onPauseListener;
-
+    String fingerPrintHash;
 
 
     public interface OnPauseListener{
-        void onFourthFragmentPause(String fatherName, String fingerPrintHash);
+        void onThirdFragmentPause(String motherName, String fingerPrintHash);
     }
-    //region Declaraciones del IBScan
+
+    private static final int CAPTURE_IMG_INE_FRONT_CODE = 2000;
+    private static final int CAPTURE_IMG_INE_BACK_CODE = 2001;
+
+
+    //region comienza las declaraciones del IBScan
     /* *********************************************************************************************
      * CONSTANTES PRIVADAS
      ******************************************************************************************** */
@@ -248,7 +237,7 @@ public class FourFragment extends Fragment implements AdapterView.OnItemSelected
     /*
      * Información retenida para cambios de orientación.
      */
-    private FourFragment.AppData m_savedData = new FourFragment.AppData();
+    private ThirdFragment.AppData m_savedData = new ThirdFragment.AppData();
 
     protected int m_nSelectedDevIndex = -1;                ///< Índice del dispositivo seleccionado
     protected boolean m_bInitializing = false;                ///< La inicialización del dispositivo está en progreso
@@ -260,7 +249,7 @@ public class FourFragment extends Fragment implements AdapterView.OnItemSelected
     protected boolean m_bBlank = false;
     protected boolean m_bSaveWarningOfClearPlaten;
 
-    protected Vector<FourFragment.CaptureInfo> m_vecCaptureSeq = new Vector<FourFragment.CaptureInfo>();        ///< Secuencia de pasos de captura
+    protected Vector<ThirdFragment.CaptureInfo> m_vecCaptureSeq = new Vector<ThirdFragment.CaptureInfo>();        ///< Secuencia de pasos de captura
     protected int m_nCurrentCaptureStep = -1;                    ///< Paso de captura actual
 
     protected IBScanDevice.LedState m_LedState;
@@ -282,37 +271,23 @@ public class FourFragment extends Fragment implements AdapterView.OnItemSelected
     // GLobal varias definiciones
     // ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    //endregion Declaraciones del IBScan
+    //endregion termina las declaraciones del IBScan
 
 
-    public FourFragment() {
+    public ThirdFragment() {
         // Required empty public constructor
     }
 
     @Override
     public void onPause(){
         super.onPause();
-        onPauseListener.onFourthFragmentPause(etFatherName.getText().toString(), fingerPrintHash);
+        onPauseListener.onThirdFragmentPause(etxMotherName.getText().toString(), fingerPrintHash);
 
-    }
-
-    public void onCreate(Bundle savedInstanceState,LayoutInflater inflater, ViewGroup container) {
-        super.onCreate(savedInstanceState);
     }
 
     @Override
     public void onAttach(Context context){
         super.onAttach(context);
-
-        // This makes sure that the container activity has implemented
-        // the callback interface. If not, it throws an exception
-        try {
-            mCallback = (OnHeadlineSelectedListener) context;
-        } catch (ClassCastException e) {
-            throw new ClassCastException(context.toString()
-                    + " must implement OnHeadlineSelectedListener");
-        }
-
         Activity activity;
         if (context instanceof Activity)
             activity = (Activity) context;
@@ -328,25 +303,24 @@ public class FourFragment extends Fragment implements AdapterView.OnItemSelected
     }
 
     @Override
+    public void onActivityCreated(Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+    }
+
+    @Override
+    public void onClick(View v) {
+    }
+
+    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        //return inflater.inflate(R.layout.fragment_second, container, false);
-        View RootView = inflater.inflate(R.layout.fragment_four, container, false);
+        View RootView = inflater.inflate(R.layout.fragment_third, container, false);
 
-        botonSave = (Button)RootView.findViewById(R.id.save);
-        botonSave.setOnClickListener(new View.OnClickListener() {
+        etxMotherName = (EditText) RootView.findViewById(R.id.motherName);
 
-            public void onClick(View view) {
-                mCallback.saveInfo();
-            }
-
-        });
-        //_InitUIFields(RootView);
-        /*InitUIFields*/
-
+        /*InitUIFields IBscan*/
         m_txtStatusMessage = (TextView) RootView.findViewById(R.id.txtStatusMessage);
-        etFatherName = (EditText) RootView.findViewById(R.id.etFatherName);
         m_imgPreview = (ImageView) RootView.findViewById(R.id.imgPreview);
         m_imgPreview.setBackgroundColor(PREVIEW_IMAGE_BACKGROUND);
 
@@ -357,19 +331,13 @@ public class FourFragment extends Fragment implements AdapterView.OnItemSelected
         m_btnCaptureStart.setOnClickListener(this.m_btnCaptureStartClickListener);
 
         m_cboUsbDevices = (Spinner) RootView.findViewById(R.id.spinUsbDevices);
-        /* */
-
-        List<String> devices = new ArrayList<String>();
-        devices.add("Select a device");
-        devices.add("Columbo");
-        devices.add("Italia");
-
         // Inicializaciones de IBScan
         m_ibScan = IBScan.getInstance(getActivity().getApplicationContext());
         m_ibScan.setScanListener(this);
 
         Resources r = Resources.getSystem();
         Configuration config = r.getConfiguration();
+
 
         /*
          Asegúrese de que no haya dispositivos USB conectados que sean escáneres IB
@@ -398,27 +366,48 @@ public class FourFragment extends Fragment implements AdapterView.OnItemSelected
         /* Inicializar la IU con datos. */
         _PopulateUI();
 
-        FourFragment._TimerTaskThreadCallback thread = new FourFragment._TimerTaskThreadCallback(__TIMER_STATUS_DELAY__);
+        ThirdFragment._TimerTaskThreadCallback thread = new ThirdFragment._TimerTaskThreadCallback(__TIMER_STATUS_DELAY__);
         thread.start();
         // terminan inicializaciones del IBScan
 
+        /*NeoBcBabies Fields*/
+        btnCaptureIneFront = (Button) RootView.findViewById(R.id.btnCaptureIneFront);
+        btnCaptureIneBack = (Button) RootView.findViewById(R.id.btnCaptureIneBack);
+        imgIneFront = (ImageView) RootView.findViewById(R.id.imgIneFront);
+        imgIneBack = (ImageView) RootView.findViewById(R.id.imgIneBack);
+        /**/
+        btnCaptureIneFront.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                startActivityForResult(intent, CAPTURE_IMG_INE_FRONT_CODE);
+            }
+        });
 
         return RootView;
     }
+
     @Override
-    public void onClick(View v) {
-    }
+    public void onActivityResult(int requestCode, int resultCode, Intent data){
+        if(requestCode == CAPTURE_IMG_INE_FRONT_CODE) {
+            Bitmap ineFrontBmb = (Bitmap) data.getExtras().get("data");
+            ByteArrayOutputStream  stream = new ByteArrayOutputStream();
+            ineFrontBmb.compress(Bitmap.CompressFormat.PNG, 100, stream);
+            byte[] byteArray = stream.toByteArray();
+            Bitmap bitmap = BitmapFactory.decodeByteArray(byteArray, 0,
+                    byteArray.length);
+
+            imgIneFront.setImageBitmap(bitmap);
+        }
+    };
 
     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
         // On selecting a spinner item
         String item = parent.getItemAtPosition(position).toString();
 
     }
-    public void onNothingSelected(AdapterView<?> arg0) {
-        // TODO Auto-generated method stub
-    }
 
-    //region Metodos del IBScan
+    //region metodos del IBScan
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
@@ -881,7 +870,7 @@ public class FourFragment extends Fragment implements AdapterView.OnItemSelected
 
     protected void _AddCaptureSeqVector(String PreCaptureMessage, String PostCaptuerMessage,
                                         IBScanDevice.ImageType imageType, int NumberOfFinger, String fingerName) {
-        FourFragment.CaptureInfo info = new FourFragment.CaptureInfo();
+        ThirdFragment.CaptureInfo info = new ThirdFragment.CaptureInfo();
         info.PreCaptureMessage = PreCaptureMessage;
         info.PostCaptuerMessage = PostCaptuerMessage;
         info.ImageType = imageType;
@@ -1018,7 +1007,7 @@ public class FourFragment extends Fragment implements AdapterView.OnItemSelected
 */
     }
 
-    public void _SetLEDs(FourFragment.CaptureInfo info, int ledColor, boolean bBlink) {
+    public void _SetLEDs(ThirdFragment.CaptureInfo info, int ledColor, boolean bBlink) {
         try {
             IBScanDevice.LedState ledState = getIBScanDevice().getOperableLEDs();
             if (ledState.ledCount == 0) {
@@ -1492,7 +1481,7 @@ public class FourFragment extends Fragment implements AdapterView.OnItemSelected
                 m_nCurrentCaptureStep++;
                 if (m_nCurrentCaptureStep >= m_vecCaptureSeq.size()) {
                     // All of capture sequence completely
-                    FourFragment.CaptureInfo tmpInfo = new FourFragment.CaptureInfo();
+                    ThirdFragment.CaptureInfo tmpInfo = new ThirdFragment.CaptureInfo();
                     _SetLEDs(tmpInfo, __LED_COLOR_NONE__, false);
                     m_nCurrentCaptureStep = -1;
 
@@ -1519,7 +1508,7 @@ public class FourFragment extends Fragment implements AdapterView.OnItemSelected
                         m_strImageMessage = "";
                     }
 
-                    FourFragment.CaptureInfo info = m_vecCaptureSeq.elementAt(m_nCurrentCaptureStep);
+                    ThirdFragment.CaptureInfo info = m_vecCaptureSeq.elementAt(m_nCurrentCaptureStep);
 
                     IBScanDevice.ImageResolution imgRes = IBScanDevice.ImageResolution.RESOLUTION_500;
                     boolean bAvailable = getIBScanDevice().isCaptureAvailable(info.ImageType, imgRes);
@@ -1896,7 +1885,7 @@ public class FourFragment extends Fragment implements AdapterView.OnItemSelected
 
             if (getIBScanDevice() == null) {
                 m_bInitializing = true;
-                FourFragment._InitializeDeviceThreadCallback thread = new FourFragment._InitializeDeviceThreadCallback(m_nSelectedDevIndex - 1);
+                ThirdFragment._InitializeDeviceThreadCallback thread = new ThirdFragment._InitializeDeviceThreadCallback(m_nSelectedDevIndex - 1);
                 thread.start();
             } else {
                 OnMsg_CaptureSeqStart();
@@ -1919,7 +1908,7 @@ public class FourFragment extends Fragment implements AdapterView.OnItemSelected
             try {
                 // Cancele la captura de la imagen para el dispositivo activo.
                 getIBScanDevice().cancelCaptureImage();
-                FourFragment.CaptureInfo tmpInfo = new FourFragment.CaptureInfo();
+                ThirdFragment.CaptureInfo tmpInfo = new ThirdFragment.CaptureInfo();
                 _SetLEDs(tmpInfo, __LED_COLOR_NONE__, false);
                 m_nCurrentCaptureStep = -1;
                 m_bNeedClearPlaten = false;
@@ -2062,7 +2051,7 @@ public class FourFragment extends Fragment implements AdapterView.OnItemSelected
     @Override
     public void deviceFingerCountChanged(final IBScanDevice device, final IBScanDevice.FingerCountState fingerState) {
         if (m_nCurrentCaptureStep >= 0) {
-            FourFragment.CaptureInfo info = m_vecCaptureSeq.elementAt(m_nCurrentCaptureStep);
+            ThirdFragment.CaptureInfo info = m_vecCaptureSeq.elementAt(m_nCurrentCaptureStep);
             if (fingerState == IBScanDevice.FingerCountState.NON_FINGER) {
                 _SetLEDs(info, __LED_COLOR_RED__, true);
             } else {
@@ -2105,6 +2094,28 @@ public class FourFragment extends Fragment implements AdapterView.OnItemSelected
     public void deviceImageResultAvailable(final IBScanDevice device, final IBScanDevice.ImageData image,
                                            final IBScanDevice.ImageType imageType, final IBScanDevice.ImageData[] splitImageArray) {
         /* TODO: ALTERNATIVELY, USE RESULTS IN THIS FUNCTION */
+        Bitmap bm = image.toBitmap();
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        bm.compress(Bitmap.CompressFormat.JPEG, 100, baos); //bm is the bitmap object
+        byte[] b = baos.toByteArray();
+
+        String encodedImage = Base64.encodeToString(b, Base64.DEFAULT);
+
+        try{
+            MessageDigest md = MessageDigest.getInstance( "SHA-256" );
+
+            // Change this to UTF-16 if needed
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                md.update( encodedImage.getBytes( StandardCharsets.UTF_8 ) );
+            }
+            byte[] digest = md.digest();
+
+            fingerPrintHash = String.format( "%064x", new BigInteger( 1, digest ) );
+            Log.d("imagen", encodedImage);
+        } catch ( NoSuchAlgorithmException ex ){
+            showToastOnUiThread(ex.getMessage(),Toast.LENGTH_SHORT);
+        }
+
     }
 
     @Override
@@ -2134,7 +2145,7 @@ public class FourFragment extends Fragment implements AdapterView.OnItemSelected
         if (imageStatus == null /*STATUS_OK*/ ||
                 imageStatus.getType().compareTo(IBScanException.Type.INVALID_PARAM_VALUE) > 0) {
             // Adquisición de imagen exitosa
-            FourFragment.CaptureInfo info = m_vecCaptureSeq.elementAt(m_nCurrentCaptureStep);
+            ThirdFragment.CaptureInfo info = m_vecCaptureSeq.elementAt(m_nCurrentCaptureStep);
             _SetLEDs(info, __LED_COLOR_GREEN__, false);
 
             // Guardar imagen
@@ -2230,7 +2241,7 @@ public class FourFragment extends Fragment implements AdapterView.OnItemSelected
             _SetStatusBarMessage(m_strImageMessage);
         } else {
             if (m_nCurrentCaptureStep >= 0) {
-                FourFragment.CaptureInfo info = m_vecCaptureSeq.elementAt(m_nCurrentCaptureStep);
+                ThirdFragment.CaptureInfo info = m_vecCaptureSeq.elementAt(m_nCurrentCaptureStep);
 
                 // Mostrar mensaje para adquisición de imágenes nuevamente
                 String strMessage = info.PreCaptureMessage;
@@ -2277,6 +2288,10 @@ public class FourFragment extends Fragment implements AdapterView.OnItemSelected
             e.printStackTrace();
         }
     }
-    //endregion Metodos IBScan
+    //endregion
 
+
+    public void onNothingSelected(AdapterView<?> arg0) {
+        // TODO Auto-generated method stub
+    }
 }
