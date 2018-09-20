@@ -304,7 +304,24 @@ public class FourFragment extends Fragment implements AdapterView.OnItemSelected
         botonSave.setOnClickListener(new View.OnClickListener() {
 
             public void onClick(View view) {
+                // Use the Builder class for convenient dialog construction
+                AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+                builder.setTitle("Aviso");
+                builder.setMessage("¿Estás seguro que los datos ingresados son los correctos?")
+                        .setPositiveButton("Aceptar", new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int id) {
+                                // FIRE ZE MISSILES!
+                            }
+                        })
+                        .setNegativeButton("Cancelar", new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int id) {
+                                // User cancelled the dialog
+                            }
+                        });
+                // Create the AlertDialog object and return it
+                builder.show();
                 onSaveListener.saveInfo(etFatherName.getText().toString(),fingerPrintHash, ineFrontB64, ineBackB64);
+
             }
         });
 
