@@ -1,4 +1,4 @@
-package com.abhiandroid.bcbabies;
+package com.neoris.bcbabies;
 
 import java.util.Timer;
 import java.util.TimerTask;

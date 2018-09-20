@@ -1,4 +1,4 @@
-package com.abhiandroid.bcbabies;
+package com.neoris.bcbabies;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -10,6 +10,7 @@ import android.content.Intent;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -18,7 +19,9 @@ import android.hardware.usb.UsbManager;
 import android.media.AudioManager;
 import android.media.ToneGenerator;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
+import android.util.Base64;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -37,6 +40,7 @@ import com.integratedbiometrics.ibscanultimate.IBScanDeviceListener;
 import com.integratedbiometrics.ibscanultimate.IBScanException;
 import com.integratedbiometrics.ibscanultimate.IBScanListener;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -49,25 +53,26 @@ import java.util.Vector;
 
 public class FourFragment extends Fragment implements AdapterView.OnItemSelectedListener, View.OnClickListener,
                                                         IBScanListener, IBScanDeviceListener{
-
-    OnHeadlineSelectedListener mCallback;
     // Container Activity must implement this interface
-    public interface OnHeadlineSelectedListener {
-        public void saveInfo();
+    public interface OnSaveListener {
+        public void saveInfo(String fatherName, String fingerPrintHash, String ineFrontB64, String ineBackB64);
     }
 
     Button botonSave;
     EditText etFatherName;
-    ImageView ivIneFront;
-    ImageView ivIneBack;
     String fingerPrintHash;
-    OnPauseListener onPauseListener;
+    Button btnCaptureIneFront;
+    Button btnCaptureIneBack;
+    ImageView imgPreviewIneFront;
+    ImageView imgPreviewIneBack;
+    OnSaveListener onSaveListener;
+    String ineFrontB64;
+    String ineBackB64;
+
+    private static final int CAPTURE_IMG_INE_FRONT_CODE = 2000;
+    private static final int CAPTURE_IMG_INE_BACK_CODE = 2001;
 
 
-
-    public interface OnPauseListener{
-        void onFourthFragmentPause(String fatherName, String fingerPrintHash);
-    }
     //region Declaraciones del IBScan
     /* *********************************************************************************************
      * CONSTANTES PRIVADAS
@@ -270,13 +275,6 @@ public class FourFragment extends Fragment implements AdapterView.OnItemSelected
         // Required empty public constructor
     }
 
-    @Override
-    public void onPause(){
-        super.onPause();
-        onPauseListener.onFourthFragmentPause(etFatherName.getText().toString(), fingerPrintHash);
-
-    }
-
     public void onCreate(Bundle savedInstanceState,LayoutInflater inflater, ViewGroup container) {
         super.onCreate(savedInstanceState);
     }
@@ -288,23 +286,10 @@ public class FourFragment extends Fragment implements AdapterView.OnItemSelected
         // This makes sure that the container activity has implemented
         // the callback interface. If not, it throws an exception
         try {
-            mCallback = (OnHeadlineSelectedListener) context;
+            onSaveListener = (OnSaveListener) context;
         } catch (ClassCastException e) {
             throw new ClassCastException(context.toString()
                     + " must implement OnHeadlineSelectedListener");
-        }
-
-        Activity activity;
-        if (context instanceof Activity)
-            activity = (Activity) context;
-        else
-            activity = null;
-
-        try{
-            onPauseListener = (OnPauseListener)activity;
-        }
-        catch (ClassCastException ex){
-            throw new ClassCastException(activity.toString() + "must implement OnPauseListener");
         }
     }
 
@@ -319,12 +304,9 @@ public class FourFragment extends Fragment implements AdapterView.OnItemSelected
         botonSave.setOnClickListener(new View.OnClickListener() {
 
             public void onClick(View view) {
-                mCallback.saveInfo();
+                onSaveListener.saveInfo(etFatherName.getText().toString(),fingerPrintHash, ineFrontB64, ineBackB64);
             }
-
         });
-        //_InitUIFields(RootView);
-        /*InitUIFields*/
 
         m_txtStatusMessage = (TextView) RootView.findViewById(R.id.txtStatusMessage);
         etFatherName = (EditText) RootView.findViewById(R.id.etFatherName);
@@ -345,7 +327,7 @@ public class FourFragment extends Fragment implements AdapterView.OnItemSelected
         devices.add("Columbo");
         devices.add("Italia");
 
-        // Inicializaciones de IBScan
+        //region Inicializaciones de IBScan
         m_ibScan = IBScan.getInstance(getActivity().getApplicationContext());
         m_ibScan.setScanListener(this);
 
@@ -381,13 +363,56 @@ public class FourFragment extends Fragment implements AdapterView.OnItemSelected
 
         FourFragment._TimerTaskThreadCallback thread = new FourFragment._TimerTaskThreadCallback(__TIMER_STATUS_DELAY__);
         thread.start();
-        // terminan inicializaciones del IBScan
+        //endregion inicializaciones del IBScan
 
+        btnCaptureIneFront = (Button) RootView.findViewById(R.id.btnCaptureIneFront);
+        btnCaptureIneBack = (Button) RootView.findViewById(R.id.btnIneCaptureBack);
+        imgPreviewIneFront = (ImageView) RootView.findViewById(R.id.imgIneFront);
+        imgPreviewIneBack = (ImageView) RootView.findViewById(R.id.imgIneBack);
 
+        btnCaptureIneFront.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                startActivityForResult(intent,CAPTURE_IMG_INE_FRONT_CODE);
+            }
+        });
+
+        btnCaptureIneBack.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                startActivityForResult(intent,CAPTURE_IMG_INE_BACK_CODE);
+            }
+        });
         return RootView;
     }
     @Override
     public void onClick(View v) {
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if(requestCode == CAPTURE_IMG_INE_FRONT_CODE) {
+            Bitmap ineFrontBmb = (Bitmap) data.getExtras().get("data");
+            ByteArrayOutputStream stream = new ByteArrayOutputStream();
+            ineFrontBmb.compress(Bitmap.CompressFormat.PNG, 100, stream);
+            byte[] byteArray = stream.toByteArray();
+            Bitmap bitmap = BitmapFactory.decodeByteArray(byteArray, 0,
+                    byteArray.length);
+            ineFrontB64 = Base64.encodeToString(byteArray, Base64.DEFAULT);
+            imgPreviewIneFront.setImageBitmap(bitmap);
+        }
+
+        if( requestCode == CAPTURE_IMG_INE_BACK_CODE){
+            Bitmap ineBackBm = (Bitmap) data.getExtras().get("data");
+            ByteArrayOutputStream stream = new ByteArrayOutputStream();
+            ineBackBm.compress(Bitmap.CompressFormat.PNG, 100, stream);
+            byte[] byteArray = stream.toByteArray();
+            Bitmap bitmap = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length);
+            ineBackB64 = Base64.encodeToString(byteArray, Base64.DEFAULT);
+            imgPreviewIneBack.setImageBitmap(bitmap);
+        }
     }
 
     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {

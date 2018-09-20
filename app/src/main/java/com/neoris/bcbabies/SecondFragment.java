@@ -1,4 +1,4 @@
-package com.abhiandroid.bcbabies;
+package com.neoris.bcbabies;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -65,7 +65,7 @@ public class SecondFragment extends Fragment implements
     OnPauseListener onPauseListener;
 
     public interface OnPauseListener {
-        void onSecondFragmentPause(String newBornName, String fingerPrintHash, String gender);
+        void onSecondFragmentPause(String newBornName, String fingerPrintHash, Integer gender);
     }
 
     //region IBScan Declaraciones
@@ -256,12 +256,12 @@ public class SecondFragment extends Fragment implements
     public void onPause() {
         super.onPause();
         int selectedSexId = sexRadioGroup.getCheckedRadioButtonId();
-        String sex;
+        Integer sex;
         if (rbMale.getId() == selectedSexId){
-            sex = "masc";
+            sex = 1;
         }
         else {
-            sex = "fem";
+            sex = 0;
         }
         onPauseListener.onSecondFragmentPause(etxNewBornName.getText().toString(), fingerPrintHash, sex);
     }

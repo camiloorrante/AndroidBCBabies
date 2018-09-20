@@ -1,4 +1,4 @@
-package com.abhiandroid.bcbabies;
+package com.neoris.bcbabies;
 
 import android.app.Activity;
 import android.app.DatePickerDialog;
@@ -63,10 +63,6 @@ public class FirstFragment extends Fragment implements View.OnClickListener, Ada
 
     public FirstFragment() {
         // Required empty public constructor
-    }
-
-    public void setRegistrant(Registrant registrant) {
-        this.registrant = registrant;
     }
 
     @Override

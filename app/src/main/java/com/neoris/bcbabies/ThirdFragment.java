@@ -1,4 +1,4 @@
-package com.abhiandroid.bcbabies;
+package com.neoris.bcbabies;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -66,10 +66,13 @@ public class ThirdFragment extends Fragment implements  AdapterView.OnItemSelect
     EditText etxMotherName;
     OnPauseListener onPauseListener;
     String fingerPrintHash;
+    String motherIneFrontB64;
+    String motherIneBackB64;
 
 
     public interface OnPauseListener{
-        void onThirdFragmentPause(String motherName, String fingerPrintHash);
+        void onThirdFragmentPause(String motherName, String fingerPrintHash,
+                                  String motherIneFront, String motherIneBack);
     }
 
     private static final int CAPTURE_IMG_INE_FRONT_CODE = 2000;
@@ -281,7 +284,8 @@ public class ThirdFragment extends Fragment implements  AdapterView.OnItemSelect
     @Override
     public void onPause(){
         super.onPause();
-        onPauseListener.onThirdFragmentPause(etxMotherName.getText().toString(), fingerPrintHash);
+        onPauseListener.onThirdFragmentPause(etxMotherName.getText().toString(), fingerPrintHash,
+                motherIneFrontB64, motherIneBackB64);
 
     }
 
@@ -384,6 +388,14 @@ public class ThirdFragment extends Fragment implements  AdapterView.OnItemSelect
             }
         });
 
+        btnCaptureIneBack.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                startActivityForResult(intent, CAPTURE_IMG_INE_BACK_CODE);
+            }
+        });
+
         return RootView;
     }
 
@@ -396,10 +408,20 @@ public class ThirdFragment extends Fragment implements  AdapterView.OnItemSelect
             byte[] byteArray = stream.toByteArray();
             Bitmap bitmap = BitmapFactory.decodeByteArray(byteArray, 0,
                     byteArray.length);
-
+            motherIneFrontB64 = Base64.encodeToString(byteArray, Base64.DEFAULT);
             imgIneFront.setImageBitmap(bitmap);
         }
-    };
+
+        if( requestCode == CAPTURE_IMG_INE_BACK_CODE){
+            Bitmap ineBackBm = (Bitmap) data.getExtras().get("data");
+            ByteArrayOutputStream stream = new ByteArrayOutputStream();
+            ineBackBm.compress(Bitmap.CompressFormat.PNG, 100, stream);
+            byte[] byteArray = stream.toByteArray();
+            Bitmap bitmap = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length);
+            motherIneBackB64 = Base64.encodeToString(byteArray, Base64.DEFAULT);
+            imgIneBack.setImageBitmap(bitmap);
+        }
+    }
 
     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
         // On selecting a spinner item

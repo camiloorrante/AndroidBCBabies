@@ -90,14 +90,14 @@
                     android:layout_alignParentLeft="true" />
 
                 <Button
-                    android:id="@+id/capture2"
+                    android:id="@+id/btnIneCaptureBack"
                     android:layout_width="50dp"
                     android:layout_height="40dp"
-                    android:layout_weight="0.5"
+                    android:layout_alignParentRight="true"
                     android:layout_marginRight="50dp"
+                    android:layout_weight="0.5"
                     android:background="@drawable/camera"
-                    android:textColor="#FFFF"
-                    android:layout_alignParentRight="true" />
+                    android:textColor="#FFFF" />
             </RelativeLayout>
             <TextView
                 android:id="@+id/version"

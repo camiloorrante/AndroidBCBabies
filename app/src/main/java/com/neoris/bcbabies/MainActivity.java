@@ -1,4 +1,4 @@
-package com.abhiandroid.bcbabies;
+package com.neoris.bcbabies;
 
 import android.os.Bundle;
 import android.support.design.widget.TabLayout;
@@ -22,14 +22,83 @@ import com.android.volley.toolbox.Volley;
 
 
 public class MainActivity extends AppCompatActivity implements FirstFragment.OnPauseListener,
-        SecondFragment.OnPauseListener, ThirdFragment.OnPauseListener, FourFragment.OnPauseListener, FourFragment.OnHeadlineSelectedListener{
+        SecondFragment.OnPauseListener, ThirdFragment.OnPauseListener, FourFragment.OnSaveListener{
 
     FrameLayout simpleFrameLayout;
     TabLayout tabLayout;
     Registrant registrant;
-    FirstFragment firstFragment;
     Fragment fragment;
     RequestQueue requestQueue;
+    Fragment fragmentOne;
+    Fragment fragmentTwo;
+    Fragment fragmentThree;
+    Fragment fragmentFour;
+
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        this.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        setContentView(R.layout.activity_main);
+        registrant = new Registrant();
+        requestQueue = Volley.newRequestQueue(this);
+        initialize();
+        // get the reference of FrameLayout and TabLayout
+        simpleFrameLayout = (FrameLayout) findViewById(R.id.simpleFrameLayout);
+        tabLayout = (TabLayout) findViewById(R.id.simpleTabLayout);
+        // Create a new Tab named "First"
+        TabLayout.Tab firstTab = tabLayout.newTab();
+        firstTab.setText("Step1"); // set the Text for the first Tab
+        // first tab
+        tabLayout.addTab(firstTab); // add  the tab at in the TabLayout
+        // Create a new Tab named "Second"
+        TabLayout.Tab secondTab = tabLayout.newTab();
+        secondTab.setText("Step2"); // set the Text for the second Tab
+        tabLayout.addTab(secondTab); // add  the tab  in the TabLayout
+        // Create a new Tab named "Third"
+        TabLayout.Tab thirdTab = tabLayout.newTab();
+        thirdTab.setText("Step3"); // set the Text for the first Tab
+        tabLayout.addTab(thirdTab); // add  the tab at in the TabLayout
+        // Create a new Tab named "Third"
+        TabLayout.Tab fourTab = tabLayout.newTab();
+        fourTab.setText("Step4"); // set the Text for the first Tab
+        tabLayout.addTab(fourTab); // add  the tab at in the TabLayout
+
+        // perform setOnTabSelectedListener event on TabLayout
+        tabLayout.setOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
+            @Override
+            public void onTabSelected(TabLayout.Tab tab) {
+                // get the current selected tab's position and replace the fragment accordingly
+                switch (tab.getPosition()) {
+                    case 0:
+                        fragment = fragmentOne;
+                        break;
+                    case 1:
+                        fragment = fragmentTwo;
+                        break;
+                    case 2:
+                        fragment = fragmentThree;
+                        break;
+                    case 3:
+                        fragment = fragmentFour;
+                        break;
+                }
+                FragmentManager fm = getSupportFragmentManager();
+                FragmentTransaction ft = fm.beginTransaction();
+                ft.replace(R.id.simpleFrameLayout, fragment);
+                ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
+                ft.commit();
+            }
+
+            @Override
+            public void onTabUnselected(TabLayout.Tab tab) {
+
+            }
+
+            @Override
+            public void onTabReselected(TabLayout.Tab tab) {
+
+            }
+        });
+    }
 
     public void saveInfo() {
         final String url = "http://10.15.29.164:3000/API/babies/registerV2";
@@ -65,91 +134,17 @@ public class MainActivity extends AppCompatActivity implements FirstFragment.OnP
 
         // add it to the RequestQueue
         requestQueue.add(postRequest);
-
-
-
-
-    }
-
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        //getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,WindowManager.LayoutParams.FLAG_FULLSCREEN);
-        this.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        setContentView(R.layout.activity_main);
-        registrant = new Registrant();
-        requestQueue = Volley.newRequestQueue(this);
-        initialize();
-        // get the reference of FrameLayout and TabLayout
-        simpleFrameLayout = (FrameLayout) findViewById(R.id.simpleFrameLayout);
-        tabLayout = (TabLayout) findViewById(R.id.simpleTabLayout);
-        // Create a new Tab named "First"
-        TabLayout.Tab firstTab = tabLayout.newTab();
-        firstTab.setText("Step1"); // set the Text for the first Tab
-        // first tab
-        tabLayout.addTab(firstTab); // add  the tab at in the TabLayout
-        // Create a new Tab named "Second"
-        TabLayout.Tab secondTab = tabLayout.newTab();
-        secondTab.setText("Step2"); // set the Text for the second Tab
-        tabLayout.addTab(secondTab); // add  the tab  in the TabLayout
-        // Create a new Tab named "Third"
-        TabLayout.Tab thirdTab = tabLayout.newTab();
-        thirdTab.setText("Step3"); // set the Text for the first Tab
-        tabLayout.addTab(thirdTab); // add  the tab at in the TabLayout
-        // Create a new Tab named "Third"
-        TabLayout.Tab fourTab = tabLayout.newTab();
-        fourTab.setText("Step4"); // set the Text for the first Tab
-        tabLayout.addTab(fourTab); // add  the tab at in the TabLayout
-
-        firstFragment = new FirstFragment();
-        firstFragment.setRegistrant(registrant);
-
-        // perform setOnTabSelectedListener event on TabLayout
-        tabLayout.setOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
-            @Override
-            public void onTabSelected(TabLayout.Tab tab) {
-                // get the current selected tab's position and replace the fragment accordingly
-                 fragment = null;
-                switch (tab.getPosition()) {
-                    case 0:
-                        //firstFragment = new FirstFragment();
-                        //firstFragment.setRegistrant(registrant);
-                        fragment = firstFragment;
-                        break;
-                    case 1:
-                        fragment = new SecondFragment();
-                        break;
-                    case 2:
-                        fragment = new ThirdFragment();
-                        break;
-                    case 3:
-                        fragment = new FourFragment();
-                        break;
-                }
-                FragmentManager fm = getSupportFragmentManager();
-                FragmentTransaction ft = fm.beginTransaction();
-                ft.replace(R.id.simpleFrameLayout, fragment);
-                ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
-                ft.commit();
-            }
-
-            @Override
-            public void onTabUnselected(TabLayout.Tab tab) {
-
-            }
-
-            @Override
-            public void onTabReselected(TabLayout.Tab tab) {
-
-            }
-        });
     }
 
     private void initialize() {
+        fragmentOne = new FirstFragment();
+        fragmentTwo = new SecondFragment();
+        fragmentThree = new ThirdFragment();
+        fragmentFour = new FourFragment();
 
-        fragment = new FirstFragment();
         FragmentManager fm = getSupportFragmentManager();
         FragmentTransaction ft = fm.beginTransaction();
-        ft.replace(R.id.simpleFrameLayout, fragment);
+        ft.replace(R.id.simpleFrameLayout, fragmentOne);
         ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
         ft.commit();
     }
@@ -166,24 +161,27 @@ public class MainActivity extends AppCompatActivity implements FirstFragment.OnP
     }
 
     @Override
-    public void onSecondFragmentPause(String newBornName, String fingerPrintHash, String gender) {
+    public void onSecondFragmentPause(String newBornName, String fingerPrintHash, Integer gender) {
         registrant.setStep2_newBornName(newBornName);
         registrant.setStep2_gender(gender);
-        registrant.setStep2_newbornFiger(fingerPrintHash);
+        registrant.setStep2_newbornFinger(fingerPrintHash);
     }
 
     @Override
-    public void onThirdFragmentPause(String motherName, String fingerPrintHash) {
+    public void onThirdFragmentPause(String motherName, String fingerPrintHash,
+                                     String motherIneFront, String motherIneBack) {
         registrant.setStep3_motherName(motherName);
         registrant.setStep3_motherFinger(fingerPrintHash);
+        registrant.setStep3_motherIneBackB64(motherIneBack);
+        registrant.setStep3_motherIneFrontB64(motherIneBack);
     }
 
     @Override
-    public void onFourthFragmentPause(String fatherName, String fingerPrintHash) {
+    public void saveInfo(String fatherName, String fingerPrintHash, String ineFrontB64, String ineBackB64) {
         registrant.setStep4_fatherName(fatherName);
         registrant.setStep4_fatherFinger(fingerPrintHash);
-
+        registrant.setStep4_fatherIneFrontB64(ineFrontB64);
+        registrant.setStep4_fatherIneBackB64(ineBackB64);
+        saveInfo();
     }
-
-
 }
