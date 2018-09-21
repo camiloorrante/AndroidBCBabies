@@ -310,7 +310,7 @@ public class FourFragment extends Fragment implements AdapterView.OnItemSelected
                 builder.setMessage("¿Estás seguro que los datos ingresados son los correctos?")
                         .setPositiveButton("Aceptar", new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int id) {
-                                // FIRE ZE MISSILES!
+                                onSaveListener.saveInfo(etFatherName.getText().toString(),fingerPrintHash, ineFrontB64, ineBackB64);
                             }
                         })
                         .setNegativeButton("Cancelar", new DialogInterface.OnClickListener() {
@@ -320,7 +320,6 @@ public class FourFragment extends Fragment implements AdapterView.OnItemSelected
                         });
                 // Create the AlertDialog object and return it
                 builder.show();
-                onSaveListener.saveInfo(etFatherName.getText().toString(),fingerPrintHash, ineFrontB64, ineBackB64);
 
             }
         });

@@ -100,56 +100,6 @@ public class MainActivity extends AppCompatActivity implements FirstFragment.OnP
         });
     }
 
-    public void saveInfo() {
-        final String url = "http://10.15.29.164:3000/API/babies/registerV2";
-
-        StringRequest postRequest = new StringRequest(Request.Method.POST, url,
-                new Response.Listener<String>()
-                {
-                    @Override
-                    public void onResponse(String response) {
-                        // response
-                        Log.d("Response", response);
-                    }
-                },
-                new Response.ErrorListener()
-                {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        // error
-                        Log.d("Error.Response", error.toString());
-                    }
-                }
-        ) {
-            @Override
-            protected Map<String, String> getParams()
-            {
-                Map<String, String>  params = new HashMap<String, String>();
-                params.put("registeredName", registrant.getStep2_newBornName());
-                params.put("babyHashFingerprint", registrant.getStep2_newbornFinger());
-                params.put("motherHashFingerprint", registrant.getStep3_motherFinger());
-                params.put("motherName", registrant.getStep3_motherName());
-                params.put("fatherHashFingerprint", registrant.getStep4_fatherFinger());
-                params.put("fatherName", registrant.getStep4_fatherName());
-                params.put("doctorName", registrant.getStep1_doctor());
-                params.put("countryCode", registrant.getStep1_country());
-                params.put("hospitalAddress", registrant.getStep1_hospital());
-                params.put("birthDay", registrant.getStep1_date());
-                Log.d("Hola", registrant.getStep2_gender().toString());
-                params.put("genero", registrant.getStep2_gender().toString());
-                params.put("imgMotherFront", registrant.getStep3_motherIneFrontB64());
-                params.put("imgFatherFront", registrant.getStep4_fatherIneFrontB64());
-                params.put("imgMotherBack", registrant.getStep3_motherIneBackB64());
-                params.put("imgFatherBack", registrant.getStep4_fatherIneBackB64());
-
-                return params;
-            }
-        };
-
-        // add it to the RequestQueue
-        requestQueue.add(postRequest);
-    }
-
     private void initialize() {
         fragmentOne = new FirstFragment();
         fragmentTwo = new SecondFragment();
@@ -196,6 +146,52 @@ public class MainActivity extends AppCompatActivity implements FirstFragment.OnP
         registrant.setStep4_fatherFinger(fingerPrintHash);
         registrant.setStep4_fatherIneFrontB64(ineFrontB64);
         registrant.setStep4_fatherIneBackB64(ineBackB64);
-        saveInfo();
+
+        final String url = "http://10.15.29.164:3000/API/babies/registerV2";
+
+        StringRequest postRequest = new StringRequest(Request.Method.POST, url,
+                new Response.Listener<String>()
+                {
+                    @Override
+                    public void onResponse(String response) {
+                        // response
+                        Log.d("Response", response);
+                    }
+                },
+                new Response.ErrorListener()
+                {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        // error
+                        Log.d("Error.Response", error.toString());
+                    }
+                }
+        ) {
+            @Override
+            protected Map<String, String> getParams()
+            {
+                Map<String, String>  params = new HashMap<String, String>();
+                params.put("registeredName", registrant.getStep2_newBornName());
+                params.put("babyHashFingerprint", registrant.getStep2_newbornFinger());
+                params.put("motherHashFingerprint", registrant.getStep3_motherFinger());
+                params.put("motherName", registrant.getStep3_motherName());
+                params.put("fatherHashFingerprint", registrant.getStep4_fatherFinger());
+                params.put("fatherName", registrant.getStep4_fatherName());
+                params.put("doctorName", registrant.getStep1_doctor());
+                params.put("countryCode", registrant.getStep1_country());
+                params.put("hospitalAddress", registrant.getStep1_hospital());
+                params.put("birthDay", registrant.getStep1_date());
+                params.put("genero", registrant.getStep2_gender().toString());
+                params.put("imgMotherFront", registrant.getStep3_motherIneFrontB64());
+                params.put("imgFatherFront", registrant.getStep4_fatherIneFrontB64());
+                params.put("imgMotherBack", registrant.getStep3_motherIneBackB64());
+                params.put("imgFatherBack", registrant.getStep4_fatherIneBackB64());
+
+                return params;
+            }
+        };
+
+        // add it to the RequestQueue
+        requestQueue.add(postRequest);
     }
 }
