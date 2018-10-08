@@ -1,5 +1,7 @@
 package com.neoris.bcbabies;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
@@ -10,15 +12,15 @@ import android.util.Log;
 import android.view.Window;
 import android.widget.FrameLayout;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
+
+import java.util.HashMap;
+import java.util.Map;
 
 
 public class MainActivity extends AppCompatActivity implements FirstFragment.OnPauseListener,
@@ -142,56 +144,88 @@ public class MainActivity extends AppCompatActivity implements FirstFragment.OnP
 
     @Override
     public void saveInfo(String fatherName, String fingerPrintHash, String ineFrontB64, String ineBackB64) {
+
+
         registrant.setStep4_fatherName(fatherName);
         registrant.setStep4_fatherFinger(fingerPrintHash);
         registrant.setStep4_fatherIneFrontB64(ineFrontB64);
         registrant.setStep4_fatherIneBackB64(ineBackB64);
 
-        final String url = "http://10.15.29.164:3000/API/babies/registerV2";
+        // Use the Builder class for convenient dialog construction
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Aviso");
+        StringBuilder cadena = new StringBuilder("¿Estás seguro que los datos ingresados son los correctos?\n\n");
+        cadena.append("HOSPITAL: " + registrant.getStep1_hospital() + "\n");
+        cadena.append("DOCTOR: " + registrant.getStep1_doctor() + "\n");
+        cadena.append("DATE: " + registrant.getStep1_date() + "\n");
+        cadena.append("TIME: " + registrant.getStep1_hour() + "\n");
+        cadena.append("COUNTRY: " + registrant.getStep1_country() + "\n");
+        cadena.append("ADDRESS: " + registrant.getStep1_address() + "\n\n");
 
-        StringRequest postRequest = new StringRequest(Request.Method.POST, url,
-                new Response.Listener<String>()
-                {
-                    @Override
-                    public void onResponse(String response) {
-                        // response
-                        Log.d("Response", response);
+        cadena.append("NAME: " + registrant.getStep2_newBornName() + "\n");
+        cadena.append("MOTHER NAME: " + registrant.getStep3_motherName() + "\n");
+        cadena.append("FATHER NAME: " + registrant.getStep4_fatherName());
+
+
+        builder.setMessage(cadena)
+                .setPositiveButton("Aceptar", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        final String url = "http://10.15.29.164:3000/API/babies/registerV2";
+
+                        StringRequest postRequest = new StringRequest(Request.Method.POST, url,
+                                new Response.Listener<String>()
+                                {
+                                    @Override
+                                    public void onResponse(String response) {
+                                        // response
+                                        Log.d("Response", response);
+                                    }
+                                },
+                                new Response.ErrorListener()
+                                {
+                                    @Override
+                                    public void onErrorResponse(VolleyError error) {
+                                        // error
+                                        Log.d("Error.Response", error.toString());
+                                    }
+                                }
+                        ) {
+                            @Override
+                            protected Map<String, String> getParams()
+                            {
+                                Map<String, String>  params = new HashMap<String, String>();
+                                params.put("registeredName", registrant.getStep2_newBornName());
+                                params.put("babyHashFingerprint", registrant.getStep2_newbornFinger());
+                                params.put("motherHashFingerprint", registrant.getStep3_motherFinger());
+                                params.put("motherName", registrant.getStep3_motherName());
+                                params.put("fatherHashFingerprint", registrant.getStep4_fatherFinger());
+                                params.put("fatherName", registrant.getStep4_fatherName());
+                                params.put("doctorName", registrant.getStep1_doctor());
+                                params.put("countryCode", registrant.getStep1_country());
+                                params.put("hospitalAddress", registrant.getStep1_hospital());
+                                params.put("birthDay", registrant.getStep1_date());
+                                params.put("genero", registrant.getStep2_gender().toString());
+                                params.put("imgMotherFront", registrant.getStep3_motherIneFrontB64());
+                                params.put("imgFatherFront", registrant.getStep4_fatherIneFrontB64());
+                                params.put("imgMotherBack", registrant.getStep3_motherIneBackB64());
+                                params.put("imgFatherBack", registrant.getStep4_fatherIneBackB64());
+
+                                return params;
+                            }
+                        };
+
+                        // add it to the RequestQueue
+                        requestQueue.add(postRequest);
                     }
-                },
-                new Response.ErrorListener()
-                {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        // error
-                        Log.d("Error.Response", error.toString());
+                })
+                .setNegativeButton("Cancelar", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        // User cancelled the dialog
                     }
-                }
-        ) {
-            @Override
-            protected Map<String, String> getParams()
-            {
-                Map<String, String>  params = new HashMap<String, String>();
-                params.put("registeredName", registrant.getStep2_newBornName());
-                params.put("babyHashFingerprint", registrant.getStep2_newbornFinger());
-                params.put("motherHashFingerprint", registrant.getStep3_motherFinger());
-                params.put("motherName", registrant.getStep3_motherName());
-                params.put("fatherHashFingerprint", registrant.getStep4_fatherFinger());
-                params.put("fatherName", registrant.getStep4_fatherName());
-                params.put("doctorName", registrant.getStep1_doctor());
-                params.put("countryCode", registrant.getStep1_country());
-                params.put("hospitalAddress", registrant.getStep1_hospital());
-                params.put("birthDay", registrant.getStep1_date());
-                params.put("genero", registrant.getStep2_gender().toString());
-                params.put("imgMotherFront", registrant.getStep3_motherIneFrontB64());
-                params.put("imgFatherFront", registrant.getStep4_fatherIneFrontB64());
-                params.put("imgMotherBack", registrant.getStep3_motherIneBackB64());
-                params.put("imgFatherBack", registrant.getStep4_fatherIneBackB64());
+                });
+        // Create the AlertDialog object and return it
+        builder.show();
 
-                return params;
-            }
-        };
 
-        // add it to the RequestQueue
-        requestQueue.add(postRequest);
     }
 }

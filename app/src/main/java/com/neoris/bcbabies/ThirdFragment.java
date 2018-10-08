@@ -1,5 +1,6 @@
 package com.neoris.bcbabies;
 
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -36,11 +37,22 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.volley.DefaultRetryPolicy;
+import com.android.volley.NetworkResponse;
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
 import com.integratedbiometrics.ibscanultimate.IBScan;
 import com.integratedbiometrics.ibscanultimate.IBScanDevice;
 import com.integratedbiometrics.ibscanultimate.IBScanDeviceListener;
 import com.integratedbiometrics.ibscanultimate.IBScanException;
 import com.integratedbiometrics.ibscanultimate.IBScanListener;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -48,6 +60,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -68,6 +81,8 @@ public class ThirdFragment extends Fragment implements  AdapterView.OnItemSelect
     String fingerPrintHash;
     String motherIneFrontB64;
     String motherIneBackB64;
+
+    RequestQueue requestQueue;
 
 
     public interface OnPauseListener{
@@ -315,6 +330,7 @@ public class ThirdFragment extends Fragment implements  AdapterView.OnItemSelect
     public void onClick(View v) {
     }
 
+    @TargetApi(Build.VERSION_CODES.HONEYCOMB_MR1)
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -375,11 +391,11 @@ public class ThirdFragment extends Fragment implements  AdapterView.OnItemSelect
         // terminan inicializaciones del IBScan
 
         /*NeoBcBabies Fields*/
-        btnCaptureIneFront = (Button) RootView.findViewById(R.id.btnCaptureIneFront);
+       btnCaptureIneFront = (Button) RootView.findViewById(R.id.btnCaptureIneFront);
         btnCaptureIneBack = (Button) RootView.findViewById(R.id.btnCaptureIneBack);
         imgIneFront = (ImageView) RootView.findViewById(R.id.imgIneFront);
         imgIneBack = (ImageView) RootView.findViewById(R.id.imgIneBack);
-        /**/
+
         btnCaptureIneFront.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -395,23 +411,30 @@ public class ThirdFragment extends Fragment implements  AdapterView.OnItemSelect
                 startActivityForResult(intent, CAPTURE_IMG_INE_BACK_CODE);
             }
         });
+        requestQueue = Volley.newRequestQueue(RootView.getContext());
+
 
         return RootView;
     }
 
+    @TargetApi(Build.VERSION_CODES.FROYO)
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data){
         if(requestCode == CAPTURE_IMG_INE_FRONT_CODE) {
-            Bitmap ineFrontBmb = (Bitmap) data.getExtras().get("data");
+           final Bitmap ineFrontBmb = (Bitmap) data.getExtras().get("data");
             ByteArrayOutputStream  stream = new ByteArrayOutputStream();
             ineFrontBmb.compress(Bitmap.CompressFormat.PNG, 100, stream);
             byte[] byteArray = stream.toByteArray();
-            Bitmap bitmap = BitmapFactory.decodeByteArray(byteArray, 0,
+           final Bitmap bitmap = BitmapFactory.decodeByteArray(byteArray, 0,
                     byteArray.length);
             motherIneFrontB64 = Base64.encodeToString(byteArray, Base64.DEFAULT);
             imgIneFront.setImageBitmap(bitmap);
-        }
 
+            Clasificador(bitmap);
+
+
+
+        }
         if( requestCode == CAPTURE_IMG_INE_BACK_CODE){
             Bitmap ineBackBm = (Bitmap) data.getExtras().get("data");
             ByteArrayOutputStream stream = new ByteArrayOutputStream();
@@ -420,9 +443,109 @@ public class ThirdFragment extends Fragment implements  AdapterView.OnItemSelect
             Bitmap bitmap = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length);
             motherIneBackB64 = Base64.encodeToString(byteArray, Base64.DEFAULT);
             imgIneBack.setImageBitmap(bitmap);
+
+            Clasificador(bitmap);
+
         }
     }
 
+   public  void Clasificador (final Bitmap imagenIneFront) {
+
+      final String mBoundary = "ANDROID_BOUNDARY_STRING";
+       final String url = "https://southcentralus.api.cognitive.microsoft.com/customvision/v2.0/Prediction/1cd65429-17d7-4a80-a31e-a57023de206f/image?iterationId=09d73512-1314-48a6-9a94-1a75ccd984bf";
+       StringRequest req = new StringRequest(Request.Method.POST, url,
+               new Response.Listener<String>() {
+                   @Override
+                   public void onResponse(String response) {
+                       Log.d("res", response);
+                   }
+               }, new Response.ErrorListener() {
+                   @Override
+                   public void onErrorResponse(VolleyError error) {
+                       String json = null;
+
+                       NetworkResponse response = error.networkResponse;
+                       if(response != null && response.data != null){
+                           switch(response.statusCode){
+                               case 400:
+                                   json = new String(response.data);
+                                   json = trimMessage(json, "message");
+                                   if(json != null) displayMessage(json);
+                                   Log.d("ErrorCase", json.toString());
+                                   break;
+                           }
+                           //Additional cases
+                       }
+                   }
+                   public String trimMessage(String json, String key){
+                       String trimmedString = null;
+
+                       try{
+                           JSONObject obj = new JSONObject(json);
+                           trimmedString = obj.getString(key);
+                       } catch(JSONException e){
+                           e.printStackTrace();
+                           return null;
+                       }
+
+                       return trimmedString;
+                   }
+
+                   //Somewhere that has access to a context
+                   public void displayMessage(String toastString){
+                       Toast.makeText(getContext(), toastString, Toast.LENGTH_LONG).show();
+                   }
+               })
+       {
+           @Override
+           public HashMap<String, String> getHeaders() {
+               HashMap<String, String> headers = new HashMap<String, String>();
+               headers.put("Prediction-Key", "d20c03142343439d8598d1cf03558421" );
+               return headers;
+
+
+           }
+
+           public byte[] getBody() {
+               ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+               try {
+                   String imageDispositionString = String.format("Content-Disposition: form-data; " +
+                           "name=\"%s\"; filename=\"%s.png\"\r\n", "foto", "foto");
+                   byte[] imageDisposition = getBytesFromString(imageDispositionString);
+                   byte[] imageBoundary = getBytesFromString("\r\n" + "--" + mBoundary + "\r\n");
+                   byte[] imageType = getBytesFromString("Content-Type: application/octet-stream\r\n\r\n");
+                   byte[] image = getBytesFromBitmap(imagenIneFront);
+
+                   byteArrayOutputStream.write(imageBoundary);
+                   byteArrayOutputStream.write(imageDisposition);
+                   byteArrayOutputStream.write(imageType);
+                   byteArrayOutputStream.write(image);
+                   byteArrayOutputStream.write(imageBoundary);
+               } catch (Exception e) {
+                   Log.d("Error2: ", "Failed to send body of photo");
+               }
+
+               return byteArrayOutputStream.toByteArray();
+           }
+       };
+       req.setShouldCache(false);
+
+       req.setRetryPolicy(new DefaultRetryPolicy(
+               16 * 1000,
+               DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+               0));
+       requestQueue.add(req);
+
+   }
+   public byte[] getBytesFromBitmap(Bitmap bitmap) {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 99, baos);
+        return baos.toByteArray();
+    }
+
+    private byte[] getBytesFromString(String string) {
+        return string.getBytes(Charset.defaultCharset());
+    }
     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
         // On selecting a spinner item
         String item = parent.getItemAtPosition(position).toString();
@@ -630,6 +753,7 @@ public class ThirdFragment extends Fragment implements  AdapterView.OnItemSelect
         }
     }
 
+    @TargetApi(Build.VERSION_CODES.CUPCAKE)
     protected Bitmap _CreateBitmap(int width, int height) {
         final Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
         if (bitmap != null) {

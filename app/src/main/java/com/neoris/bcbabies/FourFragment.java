@@ -304,22 +304,8 @@ public class FourFragment extends Fragment implements AdapterView.OnItemSelected
         botonSave.setOnClickListener(new View.OnClickListener() {
 
             public void onClick(View view) {
-                // Use the Builder class for convenient dialog construction
-                AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-                builder.setTitle("Aviso");
-                builder.setMessage("¿Estás seguro que los datos ingresados son los correctos?")
-                        .setPositiveButton("Aceptar", new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int id) {
-                                onSaveListener.saveInfo(etFatherName.getText().toString(),fingerPrintHash, ineFrontB64, ineBackB64);
-                            }
-                        })
-                        .setNegativeButton("Cancelar", new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int id) {
-                                // User cancelled the dialog
-                            }
-                        });
-                // Create the AlertDialog object and return it
-                builder.show();
+                onSaveListener.saveInfo(etFatherName.getText().toString(),fingerPrintHash, ineFrontB64, ineBackB64);
+
 
             }
         });
@@ -389,6 +375,7 @@ public class FourFragment extends Fragment implements AdapterView.OnItemSelected
         btnCaptureIneFront.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+
                 Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
                 startActivityForResult(intent,CAPTURE_IMG_INE_FRONT_CODE);
             }
@@ -409,6 +396,7 @@ public class FourFragment extends Fragment implements AdapterView.OnItemSelected
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
+
         if(requestCode == CAPTURE_IMG_INE_FRONT_CODE) {
             Bitmap ineFrontBmb = (Bitmap) data.getExtras().get("data");
             ByteArrayOutputStream stream = new ByteArrayOutputStream();

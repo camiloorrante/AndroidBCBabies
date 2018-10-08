@@ -6,6 +6,8 @@ import android.app.TimePickerDialog;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.text.format.DateFormat;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,8 +20,11 @@ import android.widget.ImageButton;
 import android.widget.Spinner;
 import android.widget.TimePicker;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 
@@ -37,6 +42,7 @@ public class FirstFragment extends Fragment implements View.OnClickListener, Ada
     Spinner sprCountry;
     EditText etxAddress;
     Registrant registrant;
+    long DateTime;
 
     Button button;
     Button button2;
@@ -141,7 +147,6 @@ public class FirstFragment extends Fragment implements View.OnClickListener, Ada
 
                 etxDate.setText(diaFormateado + BARRA + mesFormateado + BARRA + year);
 
-
             }
         },anio, mes, dia);
 
@@ -171,6 +176,7 @@ public class FirstFragment extends Fragment implements View.OnClickListener, Ada
 
         recogerHora.show();
     }
+
     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
         // On selecting a spinner item
         String item = parent.getItemAtPosition(position).toString();
@@ -202,6 +208,18 @@ public class FirstFragment extends Fragment implements View.OnClickListener, Ada
     @Override
     public void onPause() {
         super.onPause();
+
+        String dateTime2 = (etxDate.getText().toString() +" "+ etxTime.getText().toString());
+        String var = dateTime2.replace(" p.m.", "" );
+        var = dateTime2.replace(" a.m.", "");
+        SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+
+        try {
+            Date date = formatter.parse(var);
+            Log.d("Prueba", String.valueOf(date.getTime()));
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
 
         pauseListener.onFirstFragmentPause(etxHospitalName.getText().toString(), etxDoctorName.getText().toString(),
                                         etxDate.getText().toString(), etxTime.getText().toString(),
