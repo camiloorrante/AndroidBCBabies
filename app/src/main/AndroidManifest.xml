@@ -9,6 +9,16 @@
         android:label="Babies"
         android:theme="@style/AppTheme" >
 
+        <provider
+            android:name="android.support.v4.content.FileProvider"
+            android:authorities="com.neoris.bcbabies.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths"></meta-data>
+        </provider>
+
         <activity
             android:name="com.neoris.bcbabies.MainActivity">
 
@@ -19,6 +29,10 @@
 
             </intent-filter>
         </activity>
+        <activity
+            android:name=".helper.SelectedImageActivity"
+            android:label="Selecciona una imagen"
+            android:screenOrientation="portrait" />
     </application>
 
 </manifest>

@@ -5,8 +5,10 @@ import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Window;
@@ -23,7 +25,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 
-public class MainActivity extends AppCompatActivity implements FirstFragment.OnPauseListener,
+public class MainActivity extends FragmentActivity implements FirstFragment.OnPauseListener,
         SecondFragment.OnPauseListener, ThirdFragment.OnPauseListener, FourFragment.OnSaveListener{
 
     FrameLayout simpleFrameLayout;

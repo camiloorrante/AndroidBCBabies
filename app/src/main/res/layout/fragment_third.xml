@@ -35,7 +35,7 @@
                 android:textStyle="bold" />
 
             <EditText
-                android:id="@+id/motherName"
+                android:id="@+id/editTextResult"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="5dp"
@@ -51,9 +51,9 @@
                 android:orientation="horizontal">
 
                 <ImageView
-                    android:id="@+id/imgIneFront"
+                    android:id="@+id/selectedImage"
                     style="?android:attr/buttonBarButtonStyle"
-                    android:layout_width="wrap_content"
+                    android:layout_width="50dp"
                     android:layout_height="80dp"
                     android:layout_weight="0.5"
                     android:background="@color/colorGrayLight"
@@ -62,9 +62,9 @@
 
 
                 <ImageView
-                    android:id="@+id/imgIneBack"
+                    android:id="@+id/selectedImage2"
                     style="?android:attr/buttonBarButtonStyle"
-                    android:layout_width="wrap_content"
+                    android:layout_width="50dp"
                     android:layout_height="80dp"
                     android:layout_marginLeft="20dp"
                     android:layout_weight="0.5"
@@ -79,18 +79,19 @@
                 android:orientation="horizontal">
 
                 <Button
-                    android:id="@+id/btnCaptureIneFront"
                     android:layout_width="50dp"
                     android:layout_height="40dp"
                     android:layout_weight="0.5"
-                    android:layout_below="@id/btnCaptureIneFront"
+                    android:layout_below="@id/buttonSelectImage"
                     android:background="@drawable/camera"
                     android:layout_marginLeft="50dp"
                     android:textColor="#FFFF"
-                    android:layout_alignParentLeft="true" />
+                    android:layout_alignParentLeft="true"
+                    android:id="@+id/buttonSelectImage"
+                    android:onClick="selectImage"/>
 
                 <Button
-                    android:id="@+id/btnCaptureIneBack"
+                    android:id="@+id/buttonSelectImage2"
                     android:layout_width="50dp"
                     android:layout_height="40dp"
                     android:layout_alignParentRight="true"

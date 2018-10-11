@@ -19,10 +19,17 @@ import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
 import android.media.AudioManager;
 import android.media.ToneGenerator;
+import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.sax.RootElement;
+import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.ActionBarActivity;
 import android.util.Base64;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -45,15 +52,26 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
+import com.google.gson.Gson;
 import com.integratedbiometrics.ibscanultimate.IBScan;
 import com.integratedbiometrics.ibscanultimate.IBScanDevice;
 import com.integratedbiometrics.ibscanultimate.IBScanDeviceListener;
 import com.integratedbiometrics.ibscanultimate.IBScanException;
 import com.integratedbiometrics.ibscanultimate.IBScanListener;
+import com.microsoft.projectoxford.vision.VisionServiceClient;
+import com.microsoft.projectoxford.vision.VisionServiceRestClient;
+import com.microsoft.projectoxford.vision.contract.LanguageCodes;
+import com.microsoft.projectoxford.vision.contract.Line;
+import com.microsoft.projectoxford.vision.contract.OCR;
+import com.microsoft.projectoxford.vision.contract.Region;
+import com.microsoft.projectoxford.vision.contract.Word;
+import com.microsoft.projectoxford.vision.rest.VisionServiceException;
+import com.neoris.bcbabies.helper.ImageHelper;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -68,15 +86,16 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Vector;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import static android.app.Activity.RESULT_OK;
 
 public class ThirdFragment extends Fragment implements  AdapterView.OnItemSelectedListener, View.OnClickListener,
         IBScanListener, IBScanDeviceListener {
     //Declaraciones BCBabies
-    Button btnCaptureIneFront;
-    Button btnCaptureIneBack;
-    ImageView imgIneFront;
-    ImageView imgIneBack;
-    EditText etxMotherName;
+    Button botonsin;
+    Button botonsin2;
     OnPauseListener onPauseListener;
     String fingerPrintHash;
     String motherIneFrontB64;
@@ -84,6 +103,31 @@ public class ThirdFragment extends Fragment implements  AdapterView.OnItemSelect
 
     RequestQueue requestQueue;
 
+    private static final int REQUEST_TAKE_PHOTO = 0;
+    private static final int REQUEST_SELECT_IMAGE_IN_ALBUM = 1;
+
+    // The URI of photo taken from gallery
+    private Uri mUriPhotoTaken;
+
+    // File of the photo taken with camera
+    private File mFilePhotoTaken;
+    private static final int REQUEST_SELECT_IMAGE = 0;
+    private static final int REQUEST_SELECT_IMAGE2 = 1;
+
+    // The button to select an image
+    private Button mButtonSelectImage;
+
+    private Button mButtonSelectImage2;
+    // The URI of the image selected to detect.
+    private Uri mImageUri;
+
+    // The image selected to detect.
+    private Bitmap mBitmap;
+
+    // The edit to show status and result.
+    private EditText mEditText;
+
+    private VisionServiceClient client;
 
     public interface OnPauseListener{
         void onThirdFragmentPause(String motherName, String fingerPrintHash,
@@ -299,7 +343,7 @@ public class ThirdFragment extends Fragment implements  AdapterView.OnItemSelect
     @Override
     public void onPause(){
         super.onPause();
-        onPauseListener.onThirdFragmentPause(etxMotherName.getText().toString(), fingerPrintHash,
+        onPauseListener.onThirdFragmentPause(mEditText.getText().toString(), fingerPrintHash,
                 motherIneFrontB64, motherIneBackB64);
 
     }
@@ -324,6 +368,7 @@ public class ThirdFragment extends Fragment implements  AdapterView.OnItemSelect
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
+
     }
 
     @Override
@@ -331,13 +376,19 @@ public class ThirdFragment extends Fragment implements  AdapterView.OnItemSelect
     }
 
     @TargetApi(Build.VERSION_CODES.HONEYCOMB_MR1)
-    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+
+        if (client==null){
+            client = new VisionServiceRestClient(getString(R.string.subscription_key), getString(R.string.subscription_apiroot));
+        }
+
         // Inflate the layout for this fragment
         View RootView = inflater.inflate(R.layout.fragment_third, container, false);
 
-        etxMotherName = (EditText) RootView.findViewById(R.id.motherName);
+        mButtonSelectImage = (Button)RootView.findViewById(R.id.buttonSelectImage);
+        mButtonSelectImage2 = (Button) RootView.findViewById(R.id.buttonSelectImage2);
+        mEditText = (EditText) RootView.findViewById(R.id.editTextResult);
 
         /*InitUIFields IBscan*/
         m_txtStatusMessage = (TextView) RootView.findViewById(R.id.txtStatusMessage);
@@ -391,160 +442,175 @@ public class ThirdFragment extends Fragment implements  AdapterView.OnItemSelect
         // terminan inicializaciones del IBScan
 
         /*NeoBcBabies Fields*/
-       btnCaptureIneFront = (Button) RootView.findViewById(R.id.btnCaptureIneFront);
-        btnCaptureIneBack = (Button) RootView.findViewById(R.id.btnCaptureIneBack);
-        imgIneFront = (ImageView) RootView.findViewById(R.id.imgIneFront);
-        imgIneBack = (ImageView) RootView.findViewById(R.id.imgIneBack);
-
-        btnCaptureIneFront.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                startActivityForResult(intent, CAPTURE_IMG_INE_FRONT_CODE);
-            }
-        });
-
-        btnCaptureIneBack.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                startActivityForResult(intent, CAPTURE_IMG_INE_BACK_CODE);
-            }
-        });
+        botonsin = (Button) RootView.findViewById(R.id.buttonSelectImage);
+        botonsin2 = (Button) RootView.findViewById(R.id.buttonSelectImage2);
         requestQueue = Volley.newRequestQueue(RootView.getContext());
+
+        botonsin.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
+            {
+                mEditText.setText("");
+
+                Intent intent;
+                intent = new Intent(getActivity(), com.neoris.bcbabies.helper.SelectedImageActivity.class);
+                startActivityForResult(intent, REQUEST_SELECT_IMAGE);
+
+
+            }
+        });
+
+        botonsin2.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
+            {
+                Intent intent;
+                intent = new Intent(getActivity(), com.neoris.bcbabies.helper.SelectedImageActivity.class);
+                startActivityForResult(intent, REQUEST_SELECT_IMAGE2);
+
+
+            }
+        });
 
 
         return RootView;
     }
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putParcelable("ImageUri", mUriPhotoTaken);
+    }
+
+    // Recover the saved state when the activity is recreated.
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+    }
 
     @TargetApi(Build.VERSION_CODES.FROYO)
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data){
-        if(requestCode == CAPTURE_IMG_INE_FRONT_CODE) {
-           final Bitmap ineFrontBmb = (Bitmap) data.getExtras().get("data");
-            ByteArrayOutputStream  stream = new ByteArrayOutputStream();
-            ineFrontBmb.compress(Bitmap.CompressFormat.PNG, 100, stream);
-            byte[] byteArray = stream.toByteArray();
-           final Bitmap bitmap = BitmapFactory.decodeByteArray(byteArray, 0,
-                    byteArray.length);
-            motherIneFrontB64 = Base64.encodeToString(byteArray, Base64.DEFAULT);
-            imgIneFront.setImageBitmap(bitmap);
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        Log.d("AnalyzeActivity", "onActivityResult");
+        switch (requestCode) {
+            case REQUEST_SELECT_IMAGE:
+                if(resultCode == RESULT_OK) {
+                    // If image is selected successfully, set the image URI and bitmap.
+                    mImageUri = data.getData();
 
-            Clasificador(bitmap);
+                    mBitmap = ImageHelper.loadSizeLimitedBitmapFromUri(
+                            mImageUri, getContext().getContentResolver());
+                    if (mBitmap != null) {
+                        // Show the image on screen.
+                        ImageView imageView;
+                        imageView = (ImageView) getActivity().findViewById(R.id.selectedImage);
+                        imageView.setImageBitmap(mBitmap);
 
+                        // Add detection log.
+                        Log.d("AnalyzeActivity", "Image: " + mImageUri + " resized to " + mBitmap.getWidth()
+                                + "x" + mBitmap.getHeight());
 
+                        doRecognize();
+                    }
+                }
+                break;
+            case REQUEST_SELECT_IMAGE2:
+                if(resultCode == RESULT_OK) {
+                    // If image is selected successfully, set the image URI and bitmap.
+                    mImageUri = data.getData();
 
+                    mBitmap = ImageHelper.loadSizeLimitedBitmapFromUri(
+                            mImageUri, getContext().getContentResolver());
+                    if (mBitmap != null) {
+                        // Show the image on screen.
+                        ImageView imageView;
+                        imageView = (ImageView) getActivity().findViewById(R.id.selectedImage2);
+                        imageView.setImageBitmap(mBitmap);
+                    }
+                }
+                break;
+            default:
+                break;
         }
-        if( requestCode == CAPTURE_IMG_INE_BACK_CODE){
-            Bitmap ineBackBm = (Bitmap) data.getExtras().get("data");
-            ByteArrayOutputStream stream = new ByteArrayOutputStream();
-            ineBackBm.compress(Bitmap.CompressFormat.PNG, 100, stream);
-            byte[] byteArray = stream.toByteArray();
-            Bitmap bitmap = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length);
-            motherIneBackB64 = Base64.encodeToString(byteArray, Base64.DEFAULT);
-            imgIneBack.setImageBitmap(bitmap);
 
-            Clasificador(bitmap);
 
+    }
+    public void doRecognize() {
+        mButtonSelectImage.setEnabled(false);
+        mEditText.setText("Analyzing...");
+
+        try {
+            new doRequest().execute();
+        } catch (Exception e)
+        {
+            mEditText.setText("Error encountered. Exception is: " + e.toString());
         }
     }
 
-   public  void Clasificador (final Bitmap imagenIneFront) {
+    private String process() throws VisionServiceException, IOException {
+        Gson gson = new Gson();
 
-      final String mBoundary = "ANDROID_BOUNDARY_STRING";
-       final String url = "https://southcentralus.api.cognitive.microsoft.com/customvision/v2.0/Prediction/1cd65429-17d7-4a80-a31e-a57023de206f/image?iterationId=09d73512-1314-48a6-9a94-1a75ccd984bf";
-       StringRequest req = new StringRequest(Request.Method.POST, url,
-               new Response.Listener<String>() {
-                   @Override
-                   public void onResponse(String response) {
-                       Log.d("res", response);
-                   }
-               }, new Response.ErrorListener() {
-                   @Override
-                   public void onErrorResponse(VolleyError error) {
-                       String json = null;
+        // Put the image into an input stream for detection.
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        mBitmap.compress(Bitmap.CompressFormat.JPEG, 100, output);
+        ByteArrayInputStream inputStream = new ByteArrayInputStream(output.toByteArray());
 
-                       NetworkResponse response = error.networkResponse;
-                       if(response != null && response.data != null){
-                           switch(response.statusCode){
-                               case 400:
-                                   json = new String(response.data);
-                                   json = trimMessage(json, "message");
-                                   if(json != null) displayMessage(json);
-                                   Log.d("ErrorCase", json.toString());
-                                   break;
-                           }
-                           //Additional cases
-                       }
-                   }
-                   public String trimMessage(String json, String key){
-                       String trimmedString = null;
+        OCR ocr;
+        ocr = this.client.recognizeText(inputStream, LanguageCodes.AutoDetect, true);
 
-                       try{
-                           JSONObject obj = new JSONObject(json);
-                           trimmedString = obj.getString(key);
-                       } catch(JSONException e){
-                           e.printStackTrace();
-                           return null;
-                       }
+        String result = gson.toJson(ocr);
+        Log.d("result", result);
 
-                       return trimmedString;
-                   }
-
-                   //Somewhere that has access to a context
-                   public void displayMessage(String toastString){
-                       Toast.makeText(getContext(), toastString, Toast.LENGTH_LONG).show();
-                   }
-               })
-       {
-           @Override
-           public HashMap<String, String> getHeaders() {
-               HashMap<String, String> headers = new HashMap<String, String>();
-               headers.put("Prediction-Key", "d20c03142343439d8598d1cf03558421" );
-               return headers;
-
-
-           }
-
-           public byte[] getBody() {
-               ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-               try {
-                   String imageDispositionString = String.format("Content-Disposition: form-data; " +
-                           "name=\"%s\"; filename=\"%s.png\"\r\n", "foto", "foto");
-                   byte[] imageDisposition = getBytesFromString(imageDispositionString);
-                   byte[] imageBoundary = getBytesFromString("\r\n" + "--" + mBoundary + "\r\n");
-                   byte[] imageType = getBytesFromString("Content-Type: application/octet-stream\r\n\r\n");
-                   byte[] image = getBytesFromBitmap(imagenIneFront);
-
-                   byteArrayOutputStream.write(imageBoundary);
-                   byteArrayOutputStream.write(imageDisposition);
-                   byteArrayOutputStream.write(imageType);
-                   byteArrayOutputStream.write(image);
-                   byteArrayOutputStream.write(imageBoundary);
-               } catch (Exception e) {
-                   Log.d("Error2: ", "Failed to send body of photo");
-               }
-
-               return byteArrayOutputStream.toByteArray();
-           }
-       };
-       req.setShouldCache(false);
-
-       req.setRetryPolicy(new DefaultRetryPolicy(
-               16 * 1000,
-               DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
-               0));
-       requestQueue.add(req);
-
-   }
-   public byte[] getBytesFromBitmap(Bitmap bitmap) {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 99, baos);
-        return baos.toByteArray();
+        return result;
     }
 
-    private byte[] getBytesFromString(String string) {
-        return string.getBytes(Charset.defaultCharset());
+    private class doRequest extends AsyncTask<String, String, String> {
+        // Store error message
+        private Exception e = null;
+
+        public doRequest() {
+        }
+
+        @Override
+        protected String doInBackground(String... args) {
+            try {
+                return process();
+            } catch (Exception e) {
+                this.e = e;    // Store error
+            }
+
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(String data) {
+            super.onPostExecute(data);
+            // Display based on error existence
+
+            if (e != null) {
+                mEditText.setText("Error: " + e.getMessage());
+                this.e = null;
+            } else {
+                Gson gson = new Gson();
+                OCR r = gson.fromJson(data, OCR.class);
+
+                String result = "";
+                for (Region reg : r.regions) {
+                    for (Line line : reg.lines) {
+                        for (Word word : line.words) {
+                            result += word.text + " ";
+                        }
+                    }
+                }
+                String str = result;
+                Pattern pattern = Pattern.compile("NOMBRE(.*?)DOMICILIO");
+                Matcher matcher = pattern.matcher(str);
+                while (matcher.find()) {
+
+                    mEditText.setText(matcher.group(1));
+
+                }
+            }
+            mButtonSelectImage.setEnabled(true);
+        }
     }
     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
         // On selecting a spinner item

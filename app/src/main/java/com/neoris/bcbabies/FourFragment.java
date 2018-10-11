@@ -18,10 +18,13 @@ import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
 import android.media.AudioManager;
 import android.media.ToneGenerator;
+import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
 import android.util.Base64;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -34,12 +37,24 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.volley.toolbox.Volley;
+import com.google.gson.Gson;
 import com.integratedbiometrics.ibscanultimate.IBScan;
 import com.integratedbiometrics.ibscanultimate.IBScanDevice;
 import com.integratedbiometrics.ibscanultimate.IBScanDeviceListener;
 import com.integratedbiometrics.ibscanultimate.IBScanException;
 import com.integratedbiometrics.ibscanultimate.IBScanListener;
+import com.microsoft.projectoxford.vision.VisionServiceClient;
+import com.microsoft.projectoxford.vision.VisionServiceRestClient;
+import com.microsoft.projectoxford.vision.contract.LanguageCodes;
+import com.microsoft.projectoxford.vision.contract.Line;
+import com.microsoft.projectoxford.vision.contract.OCR;
+import com.microsoft.projectoxford.vision.contract.Region;
+import com.microsoft.projectoxford.vision.contract.Word;
+import com.microsoft.projectoxford.vision.rest.VisionServiceException;
+import com.neoris.bcbabies.helper.ImageHelper;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -50,14 +65,46 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import static android.app.Activity.RESULT_OK;
 
 public class FourFragment extends Fragment implements AdapterView.OnItemSelectedListener, View.OnClickListener,
                                                         IBScanListener, IBScanDeviceListener{
+
+    private static final int REQUEST_TAKE_PHOTO = 0;
+    private static final int REQUEST_SELECT_IMAGE_IN_ALBUM = 1;
+
+    // The URI of photo taken from gallery
+    private Uri mUriPhotoTaken;
+
+    // File of the photo taken with camera
+    private File mFilePhotoTaken;
+    private static final int REQUEST_SELECT_IMAGE = 0;
+    private static final int REQUEST_SELECT_IMAGE2 = 1;
+
+    // The button to select an image
+    private Button mButtonSelectImage;
+
+    private Button mButtonSelectImage2;
+    // The URI of the image selected to detect.
+    private Uri mImageUri;
+
+    // The image selected to detect.
+    private Bitmap mBitmap;
+
+    // The edit to show status and result.
+    private EditText mEditText;
+
+    private VisionServiceClient client;
+
     // Container Activity must implement this interface
     public interface OnSaveListener {
         public void saveInfo(String fatherName, String fingerPrintHash, String ineFrontB64, String ineBackB64);
     }
-
+    Button botonsin;
+    Button botonsin2;
     Button botonSave;
     EditText etFatherName;
     String fingerPrintHash;
@@ -296,9 +343,17 @@ public class FourFragment extends Fragment implements AdapterView.OnItemSelected
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+
+        if (client==null){
+            client = new VisionServiceRestClient(getString(R.string.subscription_key), getString(R.string.subscription_apiroot));
+        }
         // Inflate the layout for this fragment
         //return inflater.inflate(R.layout.fragment_second, container, false);
         View RootView = inflater.inflate(R.layout.fragment_four, container, false);
+
+        mButtonSelectImage = (Button)RootView.findViewById(R.id.buttonSelectImage);
+        mButtonSelectImage2 = (Button) RootView.findViewById(R.id.buttonSelectImage2);
+        mEditText = (EditText) RootView.findViewById(R.id.editTextResult);
 
         botonSave = (Button)RootView.findViewById(R.id.save);
         botonSave.setOnClickListener(new View.OnClickListener() {
@@ -311,7 +366,6 @@ public class FourFragment extends Fragment implements AdapterView.OnItemSelected
         });
 
         m_txtStatusMessage = (TextView) RootView.findViewById(R.id.txtStatusMessage);
-        etFatherName = (EditText) RootView.findViewById(R.id.etFatherName);
         m_imgPreview = (ImageView) RootView.findViewById(R.id.imgPreview);
         m_imgPreview.setBackgroundColor(PREVIEW_IMAGE_BACKGROUND);
 
@@ -367,28 +421,43 @@ public class FourFragment extends Fragment implements AdapterView.OnItemSelected
         thread.start();
         //endregion inicializaciones del IBScan
 
-        btnCaptureIneFront = (Button) RootView.findViewById(R.id.btnCaptureIneFront);
-        btnCaptureIneBack = (Button) RootView.findViewById(R.id.btnIneCaptureBack);
-        imgPreviewIneFront = (ImageView) RootView.findViewById(R.id.imgIneFront);
-        imgPreviewIneBack = (ImageView) RootView.findViewById(R.id.imgIneBack);
+        btnCaptureIneFront = (Button) RootView.findViewById(R.id.buttonSelectImage);
 
-        btnCaptureIneFront.setOnClickListener(new View.OnClickListener() {
+        botonsin = (Button) RootView.findViewById(R.id.buttonSelectImage);
+        botonsin2 = (Button) RootView.findViewById(R.id.buttonSelectImage2);
+
+        botonsin.setOnClickListener(new View.OnClickListener()
+        {
             @Override
-            public void onClick(View view) {
+            public void onClick(View v)
+            {
+                mEditText.setText("");
 
-                Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                startActivityForResult(intent,CAPTURE_IMG_INE_FRONT_CODE);
+                Intent intent;
+                intent = new Intent(getActivity(), com.neoris.bcbabies.helper.SelectedImageActivity.class);
+                startActivityForResult(intent, REQUEST_SELECT_IMAGE);
+
+
             }
         });
 
-        btnCaptureIneBack.setOnClickListener(new View.OnClickListener() {
+        botonsin2.setOnClickListener(new View.OnClickListener()
+        {
             @Override
-            public void onClick(View view) {
-                Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                startActivityForResult(intent,CAPTURE_IMG_INE_BACK_CODE);
+            public void onClick(View v)
+            {
+                Intent intent;
+                intent = new Intent(getActivity(), com.neoris.bcbabies.helper.SelectedImageActivity.class);
+                startActivityForResult(intent, REQUEST_SELECT_IMAGE2);
+
+
             }
         });
         return RootView;
+    }
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putParcelable("ImageUri", mUriPhotoTaken);
     }
     @Override
     public void onClick(View v) {
@@ -397,25 +466,125 @@ public class FourFragment extends Fragment implements AdapterView.OnItemSelected
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
 
-        if(requestCode == CAPTURE_IMG_INE_FRONT_CODE) {
-            Bitmap ineFrontBmb = (Bitmap) data.getExtras().get("data");
-            ByteArrayOutputStream stream = new ByteArrayOutputStream();
-            ineFrontBmb.compress(Bitmap.CompressFormat.PNG, 100, stream);
-            byte[] byteArray = stream.toByteArray();
-            Bitmap bitmap = BitmapFactory.decodeByteArray(byteArray, 0,
-                    byteArray.length);
-            ineFrontB64 = Base64.encodeToString(byteArray, Base64.DEFAULT);
-            imgPreviewIneFront.setImageBitmap(bitmap);
+        Log.d("AnalyzeActivity", "onActivityResult");
+        switch (requestCode) {
+            case REQUEST_SELECT_IMAGE:
+                if(resultCode == RESULT_OK) {
+                    // If image is selected successfully, set the image URI and bitmap.
+                    mImageUri = data.getData();
+
+                    mBitmap = ImageHelper.loadSizeLimitedBitmapFromUri(
+                            mImageUri, getContext().getContentResolver());
+                    if (mBitmap != null) {
+                        // Show the image on screen.
+                        ImageView imageView;
+                        imageView = (ImageView) getActivity().findViewById(R.id.selectedImage);
+                        imageView.setImageBitmap(mBitmap);
+
+                        // Add detection log.
+                        Log.d("AnalyzeActivity", "Image: " + mImageUri + " resized to " + mBitmap.getWidth()
+                                + "x" + mBitmap.getHeight());
+
+                        doRecognize();
+                    }
+                }
+                break;
+            case REQUEST_SELECT_IMAGE2:
+                if(resultCode == RESULT_OK) {
+                    // If image is selected successfully, set the image URI and bitmap.
+                    mImageUri = data.getData();
+
+                    mBitmap = ImageHelper.loadSizeLimitedBitmapFromUri(
+                            mImageUri, getContext().getContentResolver());
+                    if (mBitmap != null) {
+                        // Show the image on screen.
+                        ImageView imageView;
+                        imageView = (ImageView) getActivity().findViewById(R.id.selectedImage2);
+                        imageView.setImageBitmap(mBitmap);
+                    }
+                }
+                break;
+            default:
+                break;
+        }
+    }
+    public void doRecognize() {
+        mButtonSelectImage.setEnabled(false);
+        mEditText.setText("Analyzing...");
+
+        try {
+            new doRequest().execute();
+        } catch (Exception e)
+        {
+            mEditText.setText("Error encountered. Exception is: " + e.toString());
+        }
+    }
+
+    private String process() throws VisionServiceException, IOException {
+        Gson gson = new Gson();
+
+        // Put the image into an input stream for detection.
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        mBitmap.compress(Bitmap.CompressFormat.JPEG, 100, output);
+        ByteArrayInputStream inputStream = new ByteArrayInputStream(output.toByteArray());
+
+        OCR ocr;
+        ocr = this.client.recognizeText(inputStream, LanguageCodes.AutoDetect, true);
+
+        String result = gson.toJson(ocr);
+        Log.d("result", result);
+
+        return result;
+    }
+
+    private class doRequest extends AsyncTask<String, String, String> {
+        // Store error message
+        private Exception e = null;
+
+        public doRequest() {
         }
 
-        if( requestCode == CAPTURE_IMG_INE_BACK_CODE){
-            Bitmap ineBackBm = (Bitmap) data.getExtras().get("data");
-            ByteArrayOutputStream stream = new ByteArrayOutputStream();
-            ineBackBm.compress(Bitmap.CompressFormat.PNG, 100, stream);
-            byte[] byteArray = stream.toByteArray();
-            Bitmap bitmap = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length);
-            ineBackB64 = Base64.encodeToString(byteArray, Base64.DEFAULT);
-            imgPreviewIneBack.setImageBitmap(bitmap);
+        @Override
+        protected String doInBackground(String... args) {
+            try {
+                return process();
+            } catch (Exception e) {
+                this.e = e;    // Store error
+            }
+
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(String data) {
+            super.onPostExecute(data);
+            // Display based on error existence
+
+            if (e != null) {
+                mEditText.setText("Error: " + e.getMessage());
+                this.e = null;
+            } else {
+                Gson gson = new Gson();
+                OCR r = gson.fromJson(data, OCR.class);
+
+                String result = "";
+                for (Region reg : r.regions) {
+                    for (Line line : reg.lines) {
+                        for (Word word : line.words) {
+                            result += word.text + " ";
+                        }
+                    }
+                }
+                String str = result;
+                Pattern pattern = Pattern.compile("NOMBRE(.*?)DOMICILIO");
+                Matcher matcher = pattern.matcher(str);
+                while (matcher.find()) {
+
+                    mEditText.setText(matcher.group(1));
+
+                }
+            }
+            mButtonSelectImage.setEnabled(true);
         }
     }
 

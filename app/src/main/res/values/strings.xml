@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">Registration</string>
-
+    <string name="subscription_key">8dd8f9e3c3f7448b8c8d7d34fb7f3ef2</string>
+    <string name="subscription_apiroot">https://southcentralus.api.cognitive.microsoft.com/vision/v2.0/ocr?language=es&amp;detectOrientation=true</string>
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
     <string name="refresh_btn">Actualizar scanners</string>
